@@ -80,13 +80,13 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
     if (!keyboardKeyToActions[e.key]) {
         return;
     }
-    moveZeroBlock(keyboardKeyToActions[e.key])
+    moveBlankBlock(keyboardKeyToActions[e.key])
 });
 
 const stepCount = ref<number>(0);
 const GAME_STATUS = ref(0);
 
-function moveZeroBlock([rowDelta, colDeta]: number[]) {
+function moveBlankBlock([rowDelta, colDeta]: number[], step: number = 1) {
     if (GAME_STATUS.value == 200) {
         return;
     }
@@ -106,7 +106,7 @@ function moveZeroBlock([rowDelta, colDeta]: number[]) {
         return;
     }
 
-    stepCount.value++;
+    stepCount.value += step;
 
     let targetBlock = findBlock(newRow, newCol)!;
     targetBlock.col = oldCol;
@@ -128,13 +128,15 @@ function handleClickBlock(cell: Cell) {
     if (cell.col == blankBlock.value?.col) {
         const targetRow = cell.row;
         while (blankBlock.value.row != targetRow) {
-            moveZeroBlock([targetRow > blankBlock.value.row ? 1 : -1, 0])
+            moveBlankBlock([targetRow > blankBlock.value.row ? 1 : -1, 0], 0);
         }
+        stepCount.value++;
     } else if (cell.row == blankBlock.value?.row) {
         const targetCol = cell.col;
         while (blankBlock.value.col != targetCol) {
-            moveZeroBlock([0, targetCol > blankBlock.value.col ? 1 : -1])
+            moveBlankBlock([0, targetCol > blankBlock.value.col ? 1 : -1], 0);
         }
+        stepCount.value++;
     }
 }
 
