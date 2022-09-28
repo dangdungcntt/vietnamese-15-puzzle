@@ -71,7 +71,7 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
     if (isWin()) {
         setTimeout(() => {
             alert(`Win (${moveCount.value} moves)`);
-        }, 100);
+        }, 250);
         GAME_STATUS.value = GAME_STATUS_WIN;
     }
 }
