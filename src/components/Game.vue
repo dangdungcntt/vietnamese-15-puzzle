@@ -3,10 +3,16 @@ import { nextTick, ref } from 'vue';
 import { Cell } from '../model/Cell';
 import Block from './Block.vue';
 
-const WIDTH = 100;
+const GAP = 12;
+const M = 3;
+const N = 5;
+const maxWidth = (window.innerWidth - (M + 1) * GAP) / M;
+const maxHeight = (window.innerHeight - (N + 2) * GAP) / (N + 1);
+const WIDTH = Math.min(100, maxWidth, maxHeight);
+
 let requiredData: number[] = [0, 1];
 let shuffeData: number[] = [];
-for (let i = 2; i <= 15; i++) {
+for (let i = 2; i <= M * N; i++) {
     shuffeData.push(i);
 }
 
@@ -21,15 +27,16 @@ const blocks = ref<Cell[]>([...requiredData, ...shuffle(shuffeData)].map(value =
 }));
 
 const wallMap = [
-    [-1, -1, -1, -1, -1],
-    [-1, 0, -1, -1, -1],
-    [-1, 1, 2, 3, -1],
-    [-1, 4, 5, 6, -1],
-    [-1, 7, 8, 9, -1],
-    [-1, 10, 11, 12, -1],
-    [-1, 13, 14, 15, -1],
-    [-1, -1, -1, -1, -1],
+    [0, ...[new Array(M - 1)].map(() => -1)],
 ];
+
+for (let i = 1; i <= N; i++) {
+    let row = []
+    for (let j = 1; j <= M; j++) {
+        row.push((i - 1) * M + j);
+    }
+    wallMap.push(row);
+}
 
 const result: Cell[][] = [];
 let takeBlockIndex = 0;
@@ -40,7 +47,7 @@ for (let i = 0; i < wallMap.length; i++) {
     let row = [];
     for (let j = 0; j < wallMap[i].length; j++) {
         if (wallMap[i][j] == -1) {
-            row.push({ type: 'wall', value: -1, row: i, col: j, isBorderX: j == 0 || j == wallMap[i].length - 1, isBorderY: i == 0 || i == wallMap.length - 1 } as Cell);
+            row.push({ type: 'wall', value: -1, row: i, col: j } as Cell);
             continue;
         }
         let cell = blocks.value[takeBlockIndex++];
@@ -58,14 +65,16 @@ for (let i = 0; i < wallMap.length; i++) {
 
 const mapArrowKeys: Record<string, number[]> = {
     'ArrowUp': [-1, 0],
+    'w': [-1, 0],
     'ArrowRight': [0, 1],
+    'd': [0, 1],
     'ArrowDown': [1, 0],
+    's': [1, 0],
     'ArrowLeft': [0, -1],
+    'a': [0, -1],
 };
 
 window.document.addEventListener('keydown', function handleKeypress(e: KeyboardEvent) {
-    console.log(e.key);
-
     if (!mapArrowKeys[e.key]) {
         return;
     }
@@ -73,8 +82,13 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
 });
 
 const stepCount = ref<number>(0);
+const GAME_STATUS = ref(0);
 
 function moveZeroBlock([rowDelta, colDeta]: number[]) {
+    if (GAME_STATUS.value == 200) {
+        return;
+    }
+
     if (!zeroBlock.value) {
         alert('Error');
         return;
@@ -86,7 +100,7 @@ function moveZeroBlock([rowDelta, colDeta]: number[]) {
     let newRow = oldRow + rowDelta;
     let newCol = oldCol + colDeta;
 
-    if (wallMap[newRow][newCol] === -1) {
+    if (!wallMap[newRow] || wallMap[newRow][newCol] === undefined || wallMap[newRow][newCol] === -1) {
         return;
     }
 
@@ -98,12 +112,10 @@ function moveZeroBlock([rowDelta, colDeta]: number[]) {
     zeroBlock.value.row = newRow;
     zeroBlock.value.col = newCol;
 
-    nextTick(() => {
-        if (isWin()) {
-            alert(`Win (${stepCount.value} steps)`);
-            location.reload();
-        }
-    })
+    if (isWin()) {
+        alert(`Win (${stepCount.value} steps)`);
+        GAME_STATUS.value = 200;
+    }
 }
 
 function findBlock(row: number, col: number) {
@@ -134,10 +146,10 @@ function shuffle(array: any[]) {
 </script>
 
 <template>
-    <div style="position:relative;margin:0 auto;background: #ccc;" :style="{width: `${wallMap[0].length * WIDTH}px`}">
+    <div class="game-container" :style="{width: `${M * (WIDTH + GAP) + GAP}px`, 'font-size': `${2 / 4 * WIDTH}px`}">
         <template v-for="rows in result">
             <template v-for="cell in rows">
-                <Block :cell="cell" :width="WIDTH" />
+                <Block :cell="cell" :is-correct="cell.value == wallMap[cell.row][cell.col]" :width="WIDTH" :gap="GAP" />
             </template>
         </template>
     </div>

@@ -4,6 +4,4 @@ export type Cell = {
     text?: string,
     row: number,
     col: number,
-    isBorderX?: boolean
-    isBorderY?: boolean
 }
