@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, toRaw } from "vue";
 import { shuffle } from "../composables/helpers";
 import { Cell } from "../model/Cell";
 
@@ -14,7 +14,7 @@ export function buildInitData(gridWidth: number, gridHeight: number) {
 
 export function buildResultMap(gridWidth: number, gridHeight: number) {
     const results = [
-        [0, ...[new Array(gridWidth - 1)].map(() => -1)],
+        [0, ...[...new Array(gridWidth - 1)].map(() => -1)],
     ];
 
     for (let i = 1; i <= gridHeight; i++) {
@@ -36,7 +36,7 @@ export function generateValidBlocksState(results: number[][], requiredData: numb
         let state = generateBlocksState(results, requiredData, shuffeData);
         blocks = state.blocks;
         blockMaps = state.blockMaps;
-    } while (isNotSolvable(blockMaps));
+    } while (!isSolvable(blockMaps));
 
     return { blockMaps, blocks };
 
@@ -97,20 +97,27 @@ function convertValueToCorrectPosition(value: number, gridWidth: number, gridHei
     return [value % gridWidth == 0 ? value / gridWidth : (Math.floor(value / gridWidth) + 1), value % gridWidth == 0 ? gridWidth - 1 : (value % gridWidth - 1)]
 }
 
-function isNotSolvable(blockMaps: Cell[][]) {
+function isSolvable(blockMaps: Cell[][]) {
     let parity = 0;
-    let gridWidth = blockMaps[0].length;
+    const gridRow = blockMaps.length;
+    const gridColumn = blockMaps[0].length;
+
     let row = 0;
     let blankRow = 0;
 
     const puzzle = [];
-    const reversedBlockMaps = blockMaps.reverse().slice(0, blockMaps.length - 1);
-    const firstCellValue = reversedBlockMaps[reversedBlockMaps.length - 1][0].value;
-    reversedBlockMaps[reversedBlockMaps.length - 1][0].value = 0;
-    for (let row of reversedBlockMaps) for (let cell of row) puzzle.push(cell);
+    const cellOnlyBlockMaps = blockMaps.slice(1);
+
+    cellOnlyBlockMaps[0][0].value = 0;
+
+    for (let row of cellOnlyBlockMaps) {
+        for (let cell of row) {
+            puzzle.unshift(cell);
+        }
+    }
 
     for (let i = 0; i < puzzle.length; i++) {
-        if (i % gridWidth == 0) {
+        if (i % gridColumn == 0) {
             // advance to next row
             row++;
         }
@@ -118,21 +125,22 @@ function isNotSolvable(blockMaps: Cell[][]) {
             blankRow = row;
             continue;
         }
-        for (var j = i + 1; j < puzzle.length; j++) {
-            if (puzzle[i].value > puzzle[j].value && puzzle[j].value != 0) {
+        for (let j = i + 1; j < puzzle.length; j++) {
+            if (puzzle[i].value < puzzle[j].value && puzzle[j].value != 0) {
                 parity++;
             }
         }
     }
 
-    reversedBlockMaps[reversedBlockMaps.length - 1][0].value = firstCellValue;
+    cellOnlyBlockMaps[0][0].value = 1;
 
-    if (gridWidth % 2 == 0) {
-        if (blankRow % 2 == 0) {
-            return parity % 2 == 0;
-        }
-        return parity % 2 != 0;
+    if (gridColumn % 2 != 0) {
+        return parity % 2 == 0;
     }
 
-    return parity % 2 == 0;
+    if (gridRow % 2 == 0) {
+        return (parity + blankRow + 1) % 2 == 0;
+    }
+
+    return (parity + blankRow + 1) % 2 != 0;
 }

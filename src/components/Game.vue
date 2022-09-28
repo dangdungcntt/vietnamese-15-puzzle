@@ -8,13 +8,29 @@ const PADDING = 15;
 let M = 3;
 let N = 5;
 
-let paramsMatch = location.pathname.match(/^\/(\d{1,2})[x\/](\d{1,2})$/);
-if (paramsMatch) {
-    M = Math.min(Math.max(+paramsMatch[1], 3), 15);
-    N = Math.min(Math.max(+paramsMatch[2], 3), 15);
+const sizeParamsMatches = location.pathname.match(/^\/(\d{1,2})[x\/](\d{1,2})$/);
+if (sizeParamsMatches) {
+    M = Math.min(Math.max(+sizeParamsMatches[1], 3), 15);
+    N = Math.min(Math.max(+sizeParamsMatches[2], 3), 15);
 }
 
-const useImageBackground = true;
+const AVAILABLE_IMAGES: Record<string, number[]> = {
+    'tranh-dong-ho': [3, 5],
+    'ban-do-viet-nam': [3, 4],
+    'iphone-14-pro-max': [4, 6],
+}
+
+const modeImageMatches = location.pathname.match(/^\/mode\/image\/(.*)$/);
+let imageName = modeImageMatches ? modeImageMatches[1] : '';
+
+const useImageBackground = !!AVAILABLE_IMAGES[imageName];
+
+const imageUrl = useImageBackground ? `/images/${imageName}.jpg` : '';
+
+if (useImageBackground) {
+    M = AVAILABLE_IMAGES[imageName][0];
+    N = AVAILABLE_IMAGES[imageName][1];
+}
 
 const { WIDTH, GAP, BORDER_RADIUS, BACKGROUND_HEIGHT_SIZE, BACKGROUND_WIDTH_SIZE } = buildBlockSpec(M, N, PADDING, useImageBackground);
 
@@ -122,7 +138,7 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
             <template v-for="cell in rows">
                 <Block @click="handleClickBlock(cell)" :cell="cell"
                     :is-correct="cell.value == results[cell.row][cell.col]" :width="WIDTH" :gap="GAP"
-                    :border-radius="BORDER_RADIUS" background-url="/img1.jpg"
+                    :border-radius="BORDER_RADIUS" :background-url="imageUrl"
                     :background-width-size="BACKGROUND_WIDTH_SIZE" :background-height-size="BACKGROUND_HEIGHT_SIZE" />
             </template>
         </template>
