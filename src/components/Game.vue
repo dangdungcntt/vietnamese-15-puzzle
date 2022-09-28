@@ -1,69 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
+import { buildBlockSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
 import { Cell } from '../model/Cell';
 import Block from './Block.vue';
 
 const PADDING = 15;
-const M = 3;
-const N = 5;
-const GAP = M > 15 ? 6 : (M > 10 ? 8 : 12);
+let M = 3;
+let N = 5;
 
-const maxWidth = (window.innerWidth - PADDING * 2 - (M + 1) * GAP) / M;
-const maxHeight = (window.innerHeight - PADDING * 2 - (N + 2) * GAP) / (N + 1);
-const WIDTH = Math.min(100, maxWidth, maxHeight);
-
-let requiredData: number[] = [0, 1];
-let shuffeData: number[] = [];
-for (let i = 2; i <= M * N; i++) {
-    shuffeData.push(i);
+let paramsMatch = location.pathname.match(/^\/(\d{1,2})[x\/](\d{1,2})$/);
+if (paramsMatch) {
+    M = Math.min(Math.max(+paramsMatch[1], 3), 15);
+    N = Math.min(Math.max(+paramsMatch[2], 3), 15);
 }
 
-const blocks = ref<Cell[]>([...requiredData, ...shuffle(shuffeData)].map(value => {
-    return {
-        type: 'block',
-        value: value,
-        text: value?.toString(),
-        row: 0,
-        col: 0
-    } as Cell
-}));
+const { WIDTH, GAP } = buildBlockSpec(M, N, PADDING);
 
-const results = [
-    [0, ...[new Array(M - 1)].map(() => -1)],
-];
+const results = buildResultMap(M, N);
 
-for (let i = 1; i <= N; i++) {
-    let row = []
-    for (let j = 1; j <= M; j++) {
-        row.push((i - 1) * M + j);
-    }
-    results.push(row);
-}
+const { requiredData, shuffeData } = buildInitData(M, N);
 
-const blockMaps: Cell[][] = [];
-let takenBlockIndex = 0;
+const { blocks, blockMaps } = generateValidBlocksState(results, requiredData, shuffeData);
 
-const blankBlock = ref<Cell | null>(null);
-
-for (let i = 0; i < results.length; i++) {
-    let row = [];
-    for (let j = 0; j < results[i].length; j++) {
-        if (results[i][j] == -1) {
-            row.push({ type: 'wall', value: -1, row: i, col: j } as Cell);
-            continue;
-        }
-        let cell = blocks.value[takenBlockIndex++];
-        cell.row = i;
-        cell.col = j;
-
-        if (cell.value == 0) {
-            blankBlock.value = cell;
-        }
-
-        row.push(cell);
-    }
-    blockMaps.push(row);
-}
+const blankBlock = ref<Cell>(blocks.value[0]);
 
 const keyboardKeyToActions: Record<string, number[]> = {
     'ArrowUp': [-1, 0],
@@ -76,18 +35,13 @@ const keyboardKeyToActions: Record<string, number[]> = {
     'a': [0, -1],
 };
 
-window.document.addEventListener('keydown', function handleKeypress(e: KeyboardEvent) {
-    if (!keyboardKeyToActions[e.key]) {
-        return;
-    }
-    moveBlankBlock(keyboardKeyToActions[e.key])
-});
+const moveCount = ref(0);
 
-const stepCount = ref<number>(0);
 const GAME_STATUS = ref(0);
+const GAME_STATUS_WIN = 200;
 
-function moveBlankBlock([rowDelta, colDeta]: number[], step: number = 1) {
-    if (GAME_STATUS.value == 200) {
+function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1) {
+    if (GAME_STATUS.value == GAME_STATUS_WIN) {
         return;
     }
 
@@ -106,7 +60,7 @@ function moveBlankBlock([rowDelta, colDeta]: number[], step: number = 1) {
         return;
     }
 
-    stepCount.value += step;
+    moveCount.value += increaseMove;
 
     let targetBlock = findBlock(newRow, newCol)!;
     targetBlock.col = oldCol;
@@ -115,8 +69,10 @@ function moveBlankBlock([rowDelta, colDeta]: number[], step: number = 1) {
     blankBlock.value.col = newCol;
 
     if (isWin()) {
-        alert(`Win (${stepCount.value} steps)`);
-        GAME_STATUS.value = 200;
+        nextTick(() => {
+            alert(`Win (${moveCount.value} moves)`);
+        });
+        GAME_STATUS.value = GAME_STATUS_WIN;
     }
 }
 
@@ -130,13 +86,13 @@ function handleClickBlock(cell: Cell) {
         while (blankBlock.value.row != targetRow) {
             moveBlankBlock([targetRow > blankBlock.value.row ? 1 : -1, 0], 0);
         }
-        stepCount.value++;
+        moveCount.value++;
     } else if (cell.row == blankBlock.value?.row) {
         const targetCol = cell.col;
         while (blankBlock.value.col != targetCol) {
             moveBlankBlock([0, targetCol > blankBlock.value.col ? 1 : -1], 0);
         }
-        stepCount.value++;
+        moveCount.value++;
     }
 }
 
@@ -148,33 +104,30 @@ function isWin() {
     return blocks.value.filter(it => it.value == results[it.row][it.col]).length == blocks.value.length
 }
 
-function shuffle(array: any[]) {
-    const length = array == null ? 0 : array.length
-    if (!length) {
-        return []
+window.document.addEventListener('keydown', function handleKeypress(e: KeyboardEvent) {
+    if (!keyboardKeyToActions[e.key]) {
+        return;
     }
-    let index = -1
-    const lastIndex = length - 1
-    const result = [...array]
-    while (++index < length) {
-        const rand = index + Math.floor(Math.random() * (lastIndex - index + 1))
-        const value = result[rand]
-        result[rand] = result[index]
-        result[index] = value
-    }
-    return result
-}
+    moveBlankBlock(keyboardKeyToActions[e.key])
+});
 
 </script>
 
 <template>
     <div class="game-container"
-        :style="{width: `${M * (WIDTH + GAP) + GAP}px`, fontSize: `${2 / 4 * WIDTH}px`, marginTop: `${PADDING}px`}">
+        :style="{width: `${M * (WIDTH + GAP) + GAP}px`, fontSize: `${WIDTH / 2}px`, marginTop: `${PADDING}px`}">
         <template v-for="rows in blockMaps">
             <template v-for="cell in rows">
                 <Block @click="handleClickBlock(cell)" :cell="cell"
                     :is-correct="cell.value == results[cell.row][cell.col]" :width="WIDTH" :gap="GAP" />
             </template>
         </template>
+
+        <div style="position:absolute;text-align:right;font-weight: bold;" :style="{
+                right: `${GAP}px`, top: `${GAP}px`, fontSize: `${Math.min(24, WIDTH / 3)}px`
+        }">
+            <div>Moves</div>
+            <div>{{ moveCount }}</div>
+        </div>
     </div>
 </template>
