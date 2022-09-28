@@ -3,5 +3,5 @@
 ## TODO
 
 - [ ] Check is valid game state
-- [ ] Click neighborhood to move
+- [x] Click neighborhood to move
 - [ ] Show step & time

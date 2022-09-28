@@ -8,6 +8,8 @@ defineProps<{
     isCorrect: boolean
 }>();
 
+defineEmits(['click']);
+
 </script>
 
 <template>
@@ -22,7 +24,7 @@ defineProps<{
         top: `${cell.row * width + gap * (cell.row + 1)}px`, 
         width: `${width}px`,
         height: `${width}px`,
-    }">
+    }" @click="$emit('click')">
         <span v-if="cell.value > 0">{{ cell.text }}</span>
     </div>
 </template>
