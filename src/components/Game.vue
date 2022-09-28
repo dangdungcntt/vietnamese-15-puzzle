@@ -14,7 +14,9 @@ if (paramsMatch) {
     N = Math.min(Math.max(+paramsMatch[2], 3), 15);
 }
 
-const { WIDTH, GAP } = buildBlockSpec(M, N, PADDING);
+const useImageBackground = true;
+
+const { WIDTH, GAP, BORDER_RADIUS, BACKGROUND_HEIGHT_SIZE, BACKGROUND_WIDTH_SIZE } = buildBlockSpec(M, N, PADDING, useImageBackground);
 
 const results = buildResultMap(M, N);
 
@@ -119,7 +121,9 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
         <template v-for="rows in blockMaps">
             <template v-for="cell in rows">
                 <Block @click="handleClickBlock(cell)" :cell="cell"
-                    :is-correct="cell.value == results[cell.row][cell.col]" :width="WIDTH" :gap="GAP" />
+                    :is-correct="cell.value == results[cell.row][cell.col]" :width="WIDTH" :gap="GAP"
+                    :border-radius="BORDER_RADIUS" background-url="/img1.jpg"
+                    :background-width-size="BACKGROUND_WIDTH_SIZE" :background-height-size="BACKGROUND_HEIGHT_SIZE" />
             </template>
         </template>
 

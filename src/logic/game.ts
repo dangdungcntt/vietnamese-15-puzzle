@@ -42,15 +42,19 @@ export function generateValidBlocksState(results: number[][], requiredData: numb
 
 }
 
-export function buildBlockSpec(gridWidth: number, gridHeight: number, containerPadding: number) {
+export function buildBlockSpec(gridWidth: number, gridHeight: number, containerPadding: number, useImageBackground: boolean) {
     const maxSize = Math.max(gridWidth, gridHeight);
-    const GAP = maxSize >= 12 ? 6 : (maxSize >= 8 ? 8 : 12);
+    const GAP = useImageBackground ? 2 : (maxSize >= 12 ? 6 : (maxSize >= 8 ? 8 : 12));
+    const BORDER_RADIUS = useImageBackground ? 2 : 10;
 
     const maxWidth = (window.innerWidth - containerPadding * 2 - (gridWidth + 1) * GAP) / gridWidth;
     const maxHeight = (window.innerHeight - containerPadding * 2 - (gridHeight + 2) * GAP) / (gridHeight + 1);
     const WIDTH = Math.min(120, maxWidth, maxHeight);
 
-    return { WIDTH, GAP };
+    const BACKGROUND_WIDTH_SIZE = gridWidth * WIDTH + GAP * (gridWidth - 1);
+    const BACKGROUND_HEIGHT_SIZE = gridHeight * WIDTH + GAP * (gridHeight - 1);
+
+    return { WIDTH, GAP, BORDER_RADIUS, BACKGROUND_HEIGHT_SIZE, BACKGROUND_WIDTH_SIZE };
 }
 
 function generateBlocksState(results: number[][], requiredData: number[], shuffeData: number[]) {
@@ -77,6 +81,9 @@ function generateBlocksState(results: number[][], requiredData: number[], shuffe
             let cell = blocks.value[takenBlockIndex++];
             cell.row = i;
             cell.col = j;
+            let [cX, cY] = convertValueToCorrectPosition(cell.value, results[i].length, results.length)
+            cell.correctRow = cX;
+            cell.correctCol = cY;
 
             row.push(cell);
         }
@@ -84,6 +91,10 @@ function generateBlocksState(results: number[][], requiredData: number[], shuffe
     }
 
     return { blocks, blockMaps };
+}
+
+function convertValueToCorrectPosition(value: number, gridWidth: number, gridHeight: number) {
+    return [value % gridWidth == 0 ? value / gridWidth : (Math.floor(value / gridWidth) + 1), value % gridWidth == 0 ? gridWidth - 1 : (value % gridWidth - 1)]
 }
 
 function isNotSolvable(blockMaps: Cell[][]) {

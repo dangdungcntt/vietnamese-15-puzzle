@@ -4,4 +4,6 @@ export type Cell = {
     text?: string,
     row: number,
     col: number,
+    correctRow: number,
+    correctCol: number,
 }
