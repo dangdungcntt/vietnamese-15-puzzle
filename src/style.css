@@ -69,7 +69,6 @@ body {
 .game-container {
     position: relative;
     margin: 0 auto;
-    background: #ccc;
 }
 
 .block {

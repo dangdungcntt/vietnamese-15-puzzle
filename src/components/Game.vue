@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue';
+import { ref } from 'vue';
 import { Cell } from '../model/Cell';
 import Block from './Block.vue';
 
-const GAP = 12;
-const M = 3;
-const N = 5;
-const maxWidth = (window.innerWidth - (M + 1) * GAP) / M;
-const maxHeight = (window.innerHeight - (N + 2) * GAP) / (N + 1);
+const PADDING = 15;
+const M = 15;
+const N = 10;
+const GAP = M > 15 ? 6 : (M > 10 ? 8 : 12);
+
+const maxWidth = (window.innerWidth - PADDING * 2 - (M + 1) * GAP) / M;
+const maxHeight = (window.innerHeight - PADDING * 2 - (N + 2) * GAP) / (N + 1);
 const WIDTH = Math.min(100, maxWidth, maxHeight);
 
 let requiredData: number[] = [0, 1];
@@ -146,7 +148,8 @@ function shuffle(array: any[]) {
 </script>
 
 <template>
-    <div class="game-container" :style="{width: `${M * (WIDTH + GAP) + GAP}px`, 'font-size': `${2 / 4 * WIDTH}px`}">
+    <div class="game-container"
+        :style="{width: `${M * (WIDTH + GAP) + GAP}px`, fontSize: `${2 / 4 * WIDTH}px`, marginTop: `${PADDING}px`}">
         <template v-for="rows in result">
             <template v-for="cell in rows">
                 <Block :cell="cell" :is-correct="cell.value == wallMap[cell.row][cell.col]" :width="WIDTH" :gap="GAP" />
