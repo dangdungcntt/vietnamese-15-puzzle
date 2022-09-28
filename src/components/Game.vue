@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue';
+import { ref } from 'vue';
 import { buildBlockSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
 import { Cell } from '../model/Cell';
 import Block from './Block.vue';
@@ -69,9 +69,9 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
     blankBlock.value.col = newCol;
 
     if (isWin()) {
-        nextTick(() => {
+        setTimeout(() => {
             alert(`Win (${moveCount.value} moves)`);
-        });
+        }, 100);
         GAME_STATUS.value = GAME_STATUS_WIN;
     }
 }
