@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { buildBlockSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
+import { buildBlockSpec, buildGameContainerSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
 import { Cell } from '../model/Cell';
 import Block from './Block.vue';
 import ZoomableImage from './ZoomableImage.vue';
@@ -35,7 +35,7 @@ if (useImageBackground) {
 }
 
 const {
-    WIDTH, GAP,
+    BLOCK_SIZE, GAP,
     BORDER_RADIUS,
     BACKGROUND_HEIGHT_SIZE,
     BACKGROUND_WIDTH_SIZE
@@ -44,7 +44,15 @@ const {
     gridCols: GRID_COLS,
     containerPadding: PADDING,
     useImageBackground: useImageBackground
-})
+});
+
+const { CONTAINER_HEIGHT, CONTAINER_WIDTH } = buildGameContainerSpec({
+    gridRows: GRID_ROWS,
+    gridCols: GRID_COLS,
+    containerPadding: PADDING,
+    blockSize: BLOCK_SIZE,
+    gap: GAP
+});
 
 const results = buildResultMap({
     gridRows: GRID_ROWS,
@@ -151,21 +159,22 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
 
 <template>
     <div class="game-container" :data-rows="GRID_ROWS" :data-cols="GRID_COLS"
-        :style="{width: `${GRID_COLS * (WIDTH + GAP) + GAP}px`, fontSize: `${WIDTH / 2}px`, marginTop: `${PADDING}px`}">
+        :style="{width: `${GRID_COLS * (BLOCK_SIZE + GAP) + GAP}px`, fontSize: `${BLOCK_SIZE / 2}px`, marginTop: `${PADDING}px`}">
         <template v-for="rows in blockMaps">
             <template v-for="cell in rows">
                 <Block @click="handleClickBlock(cell)" :cell="cell"
-                    :is-correct="cell.value == results[cell.row][cell.col]" :width="WIDTH" :gap="GAP"
+                    :is-correct="cell.value == results[cell.row][cell.col]" :width="BLOCK_SIZE" :gap="GAP"
                     :border-radius="BORDER_RADIUS" :background-url="imageUrl"
                     :background-width-size="BACKGROUND_WIDTH_SIZE" :background-height-size="BACKGROUND_HEIGHT_SIZE" />
             </template>
         </template>
 
         <div style="position:absolute;text-align:right;font-weight: bold;display:flex;" :style="{
-                right: `${GAP}px`, top: `${GAP}px`, fontSize: `${Math.min(24, WIDTH / 3)}px`
+                right: `${GAP}px`, top: `${GAP}px`, fontSize: `${Math.min(24, BLOCK_SIZE / 3)}px`
         }">
             <div v-if="useImageBackground" style="margin-right: 15px;">
-                <ZoomableImage :height="WIDTH" :image="imageUrl" :placeholder="imageUrl" />
+                <ZoomableImage :full-width="CONTAINER_WIDTH" :full-height="CONTAINER_HEIGHT" :width="BLOCK_SIZE"
+                    :height="BLOCK_SIZE" :image="imageUrl" :placeholder="imageUrl" />
             </div>
 
             <div>

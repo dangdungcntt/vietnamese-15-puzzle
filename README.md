@@ -10,5 +10,9 @@
 - [x] Check is valid game state
 - [x] Click neighborhood to move
 - [x] Show move count
-- [x] Support use image
-- [ ] Show mini image
+- [x] Image mode
+- [x] Show mini image in image mode (click to toggle zoom in/out)
+- [ ] Game room mode (enter pin, name, restrict click move to nearest neighborhood)
+- [ ] Game room score board (web socket)
+- [ ] Menu list map of image mode
+

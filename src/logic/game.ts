@@ -42,6 +42,25 @@ export function generateValidBlocksState(results: number[][], requiredData: numb
 
 }
 
+export function buildGameContainerSpec({
+    gridCols,
+    gridRows,
+    blockSize,
+    gap,
+    containerPadding,
+}: {
+    gridCols: number,
+    gridRows: number,
+    blockSize: number,
+    gap: number,
+    containerPadding: number,
+}) {
+    const CONTAINER_WIDTH = gridCols * (blockSize + gap) + gap;
+    const CONTAINER_HEIGHT = (gridRows + 1) * (blockSize + gap) + gap;
+
+    return { CONTAINER_HEIGHT, CONTAINER_WIDTH };
+}
+
 export function buildBlockSpec({
     gridCols,
     gridRows,
@@ -59,12 +78,12 @@ export function buildBlockSpec({
 
     const maxWidth = (window.innerWidth - containerPadding * 2 - (gridCols + 1) * GAP) / gridCols;
     const maxHeight = (window.innerHeight - containerPadding * 2 - (gridRows + 2) * GAP) / (gridRows + 1);
-    const WIDTH = Math.min(120, maxWidth, maxHeight);
+    const BLOCK_SIZE = Math.min(120, maxWidth, maxHeight);
 
-    const BACKGROUND_WIDTH_SIZE = gridCols * WIDTH + GAP * (gridCols - 1);
-    const BACKGROUND_HEIGHT_SIZE = gridRows * WIDTH + GAP * (gridRows - 1);
+    const BACKGROUND_WIDTH_SIZE = gridCols * BLOCK_SIZE + GAP * (gridCols - 1);
+    const BACKGROUND_HEIGHT_SIZE = gridRows * BLOCK_SIZE + GAP * (gridRows - 1);
 
-    return { WIDTH, GAP, BORDER_RADIUS, BACKGROUND_HEIGHT_SIZE, BACKGROUND_WIDTH_SIZE };
+    return { BLOCK_SIZE, GAP, BORDER_RADIUS, BACKGROUND_HEIGHT_SIZE, BACKGROUND_WIDTH_SIZE };
 }
 
 function generateBlocksState(results: number[][], requiredData: number[], shuffeData: number[]) {
