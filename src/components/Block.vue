@@ -37,7 +37,7 @@ const isUseImage = !!backgroundUrl
         backgroundSize: isBlockItem && backgroundWidthSize ? `${backgroundWidthSize}px ${backgroundHeightSize}px`: undefined,
         backgroundPositionX: `-${cell.correctCol * width + cell.correctCol * gap}px`,
         backgroundPositionY: `-${(cell.correctRow - 1) * width + gap * (cell.correctRow - 1)}px`, 
-    }" @click="$emit('click')">
+    }" @click="$emit('click')" :data-value="cell.value">
         <span v-if="isBlockItem && !isUseImage">{{ cell.text }}</span>
     </div>
 </template>

@@ -18,6 +18,7 @@ const AVAILABLE_IMAGES: Record<string, number[]> = {
     'tranh-dong-ho': [3, 5],
     'ban-do-viet-nam': [3, 4],
     'iphone-14-pro-max': [4, 6],
+    'phong-canh-1': [6, 5],
 }
 
 const modeImageMatches = location.pathname.match(/^\/mode\/image\/(.*)$/);
