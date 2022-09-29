@@ -18,7 +18,7 @@ const style = computed(() => {
         return `width:${fullWidth}px;height:${fullHeight}px;transition: width 0.25s linear, height 0.25s linear;z-index: 11;position: fixed;left: 50%;transform: translate(-50%, 0);background:#000`
     }
 
-    return `width:${width}px;height:${height}px;transition: width 0.15s linear, height 0.25s linear;z-index: 11;padding:5px 5px 10px;`
+    return `width:${width}px;height:${height}px;z-index: 11;padding:5px 5px 10px;`
 })
 
 function toggleZoomIn() {
