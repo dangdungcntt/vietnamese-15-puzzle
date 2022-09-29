@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { buildBlockSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
 import { Cell } from '../model/Cell';
 import Block from './Block.vue';
+import ZoomableImage from './ZoomableImage.vue';
 
 const PADDING = 15;
 let GRID_COLS = 3;
@@ -160,11 +161,17 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
             </template>
         </template>
 
-        <div style="position:absolute;text-align:right;font-weight: bold;" :style="{
+        <div style="position:absolute;text-align:right;font-weight: bold;display:flex;" :style="{
                 right: `${GAP}px`, top: `${GAP}px`, fontSize: `${Math.min(24, WIDTH / 3)}px`
         }">
-            <div>Moves</div>
-            <div>{{ moveCount }}</div>
+            <div v-if="useImageBackground" style="margin-right: 15px;">
+                <ZoomableImage :height="WIDTH" :image="imageUrl" :placeholder="imageUrl" />
+            </div>
+
+            <div>
+                <div>Moves</div>
+                <div>{{ moveCount }}</div>
+            </div>
         </div>
     </div>
 </template>

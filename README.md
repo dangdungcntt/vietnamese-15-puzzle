@@ -10,4 +10,5 @@
 - [x] Check is valid game state
 - [x] Click neighborhood to move
 - [x] Show move count
-- [ ] Support use image
+- [x] Support use image
+- [ ] Show mini image
