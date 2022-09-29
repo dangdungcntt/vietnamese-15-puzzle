@@ -5,20 +5,20 @@ import { Cell } from '../model/Cell';
 import Block from './Block.vue';
 
 const PADDING = 15;
-let M = 3;
-let N = 5;
+let GRID_COLS = 3;
+let GRID_ROWS = 5;
 
 const sizeParamsMatches = location.pathname.match(/^\/(\d{1,2})[x\/](\d{1,2})$/);
 if (sizeParamsMatches) {
-    M = Math.min(Math.max(+sizeParamsMatches[1], 3), 15);
-    N = Math.min(Math.max(+sizeParamsMatches[2], 3), 15);
+    GRID_ROWS = Math.min(Math.max(+sizeParamsMatches[1], 3), 15);
+    GRID_COLS = Math.min(Math.max(+sizeParamsMatches[2], 3), 15);
 }
 
 const AVAILABLE_IMAGES: Record<string, number[]> = {
-    'tranh-dong-ho': [3, 5],
-    'ban-do-viet-nam': [3, 4],
-    'iphone-14-pro-max': [4, 6],
-    'phong-canh-1': [6, 5],
+    'tranh-dong-ho': [5, 3],
+    'ban-do-viet-nam': [4, 3],
+    'iphone-14-pro-max': [6, 4],
+    'phong-canh-1': [5, 6],
 }
 
 const modeImageMatches = location.pathname.match(/^\/mode\/image\/(.*)$/);
@@ -29,15 +29,31 @@ const useImageBackground = !!AVAILABLE_IMAGES[imageName];
 const imageUrl = useImageBackground ? `/images/${imageName}.jpg` : '';
 
 if (useImageBackground) {
-    M = AVAILABLE_IMAGES[imageName][0];
-    N = AVAILABLE_IMAGES[imageName][1];
+    GRID_ROWS = AVAILABLE_IMAGES[imageName][0];
+    GRID_COLS = AVAILABLE_IMAGES[imageName][1];
 }
 
-const { WIDTH, GAP, BORDER_RADIUS, BACKGROUND_HEIGHT_SIZE, BACKGROUND_WIDTH_SIZE } = buildBlockSpec(M, N, PADDING, useImageBackground);
+const {
+    WIDTH, GAP,
+    BORDER_RADIUS,
+    BACKGROUND_HEIGHT_SIZE,
+    BACKGROUND_WIDTH_SIZE
+} = buildBlockSpec({
+    gridRows: GRID_ROWS,
+    gridCols: GRID_COLS,
+    containerPadding: PADDING,
+    useImageBackground: useImageBackground
+})
 
-const results = buildResultMap(M, N);
+const results = buildResultMap({
+    gridRows: GRID_ROWS,
+    gridCols: GRID_COLS,
+});
 
-const { requiredData, shuffeData } = buildInitData(M, N);
+const { requiredData, shuffeData } = buildInitData({
+    gridRows: GRID_ROWS,
+    gridCols: GRID_COLS,
+});
 
 const { blocks, blockMaps } = generateValidBlocksState(results, requiredData, shuffeData);
 
@@ -133,8 +149,8 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
 </script>
 
 <template>
-    <div class="game-container"
-        :style="{width: `${M * (WIDTH + GAP) + GAP}px`, fontSize: `${WIDTH / 2}px`, marginTop: `${PADDING}px`}">
+    <div class="game-container" :data-rows="GRID_ROWS" :data-cols="GRID_COLS"
+        :style="{width: `${GRID_COLS * (WIDTH + GAP) + GAP}px`, fontSize: `${WIDTH / 2}px`, marginTop: `${PADDING}px`}">
         <template v-for="rows in blockMaps">
             <template v-for="cell in rows">
                 <Block @click="handleClickBlock(cell)" :cell="cell"

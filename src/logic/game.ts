@@ -2,25 +2,25 @@ import { ref, toRaw } from "vue";
 import { shuffle } from "../composables/helpers";
 import { Cell } from "../model/Cell";
 
-export function buildInitData(gridWidth: number, gridHeight: number) {
+export function buildInitData({ gridCols, gridRows }: { gridCols: number, gridRows: number }) {
     const requiredData: number[] = [0, 1];
     const shuffeData: number[] = [];
-    for (let i = 2; i <= gridWidth * gridHeight; i++) {
+    for (let i = 2; i <= gridCols * gridRows; i++) {
         shuffeData.push(i);
     }
 
     return { requiredData, shuffeData };
 }
 
-export function buildResultMap(gridWidth: number, gridHeight: number) {
+export function buildResultMap({ gridCols, gridRows }: { gridCols: number, gridRows: number }) {
     const results = [
-        [0, ...[...new Array(gridWidth - 1)].map(() => -1)],
+        [0, ...[...Array(gridCols - 1)].map(() => -1)],
     ];
 
-    for (let i = 1; i <= gridHeight; i++) {
+    for (let i = 1; i <= gridRows; i++) {
         let row = []
-        for (let j = 1; j <= gridWidth; j++) {
-            row.push((i - 1) * gridWidth + j);
+        for (let j = 1; j <= gridCols; j++) {
+            row.push((i - 1) * gridCols + j);
         }
         results.push(row);
     }
@@ -42,17 +42,27 @@ export function generateValidBlocksState(results: number[][], requiredData: numb
 
 }
 
-export function buildBlockSpec(gridWidth: number, gridHeight: number, containerPadding: number, useImageBackground: boolean) {
-    const maxSize = Math.max(gridWidth, gridHeight);
+export function buildBlockSpec({
+    gridCols,
+    gridRows,
+    containerPadding,
+    useImageBackground
+}: {
+    gridCols: number,
+    gridRows: number,
+    containerPadding: number,
+    useImageBackground: boolean
+}) {
+    const maxSize = Math.max(gridCols, gridRows);
     const GAP = useImageBackground ? 2 : (maxSize >= 12 ? 6 : (maxSize >= 8 ? 8 : 12));
     const BORDER_RADIUS = useImageBackground ? 2 : 10;
 
-    const maxWidth = (window.innerWidth - containerPadding * 2 - (gridWidth + 1) * GAP) / gridWidth;
-    const maxHeight = (window.innerHeight - containerPadding * 2 - (gridHeight + 2) * GAP) / (gridHeight + 1);
+    const maxWidth = (window.innerWidth - containerPadding * 2 - (gridCols + 1) * GAP) / gridCols;
+    const maxHeight = (window.innerHeight - containerPadding * 2 - (gridRows + 2) * GAP) / (gridRows + 1);
     const WIDTH = Math.min(120, maxWidth, maxHeight);
 
-    const BACKGROUND_WIDTH_SIZE = gridWidth * WIDTH + GAP * (gridWidth - 1);
-    const BACKGROUND_HEIGHT_SIZE = gridHeight * WIDTH + GAP * (gridHeight - 1);
+    const BACKGROUND_WIDTH_SIZE = gridCols * WIDTH + GAP * (gridCols - 1);
+    const BACKGROUND_HEIGHT_SIZE = gridRows * WIDTH + GAP * (gridRows - 1);
 
     return { WIDTH, GAP, BORDER_RADIUS, BACKGROUND_HEIGHT_SIZE, BACKGROUND_WIDTH_SIZE };
 }
@@ -81,7 +91,10 @@ function generateBlocksState(results: number[][], requiredData: number[], shuffe
             let cell = blocks.value[takenBlockIndex++];
             cell.row = i;
             cell.col = j;
-            let [cX, cY] = convertValueToCorrectPosition(cell.value, results[i].length, results.length)
+            let [cX, cY] = convertValueToCorrectPosition(cell.value, {
+                gridRows: results.length,
+                gridCols: results[i].length
+            })
             cell.correctRow = cX;
             cell.correctCol = cY;
 
@@ -93,14 +106,17 @@ function generateBlocksState(results: number[][], requiredData: number[], shuffe
     return { blocks, blockMaps };
 }
 
-function convertValueToCorrectPosition(value: number, gridWidth: number, gridHeight: number) {
-    return [value % gridWidth == 0 ? value / gridWidth : (Math.floor(value / gridWidth) + 1), value % gridWidth == 0 ? gridWidth - 1 : (value % gridWidth - 1)]
+function convertValueToCorrectPosition(value: number, { gridCols, gridRows }: { gridCols: number, gridRows: number }) {
+    return [
+        value % gridCols == 0 ? value / gridCols : (Math.floor(value / gridCols) + 1),
+        value % gridCols == 0 ? gridCols - 1 : (value % gridCols - 1)
+    ];
 }
 
 function isSolvable(blockMaps: Cell[][]) {
     let parity = 0;
-    const gridRow = blockMaps.length;
-    const gridColumn = blockMaps[0].length;
+    const gridRows = blockMaps.length;
+    const gridColumns = blockMaps[0].length;
 
     let row = 0;
     let blankRow = 0;
@@ -117,7 +133,7 @@ function isSolvable(blockMaps: Cell[][]) {
     }
 
     for (let i = 0; i < puzzle.length; i++) {
-        if (i % gridColumn == 0) {
+        if (i % gridColumns == 0) {
             // advance to next row
             row++;
         }
@@ -134,11 +150,11 @@ function isSolvable(blockMaps: Cell[][]) {
 
     cellOnlyBlockMaps[0][0].value = 1;
 
-    if (gridColumn % 2 != 0) {
+    if (gridColumns % 2 != 0) {
         return parity % 2 == 0;
     }
 
-    if (gridRow % 2 == 0) {
+    if (gridRows % 2 == 0) {
         return (parity + blankRow + 1) % 2 == 0;
     }
 
