@@ -1,18 +1,38 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { reactive, ref } from 'vue';
+import { millisecondsToStr } from '../composables/helpers';
+import { SCREEN_PADDING, MODE_CLASSIC, MODE_IMAGE, STATUS_PLAYING, STATUS_WAITING, STATUS_WIN } from '../logic/constants';
 import { buildBlockSpec, buildGameContainerSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
 import { Cell } from '../model/Cell';
 import Block from './Block.vue';
 import ZoomableImage from './ZoomableImage.vue';
 
-const PADDING = 15;
-let GRID_COLS = 3;
-let GRID_ROWS = 5;
+const config = {
+    mode: MODE_CLASSIC,
+    image: {
+        url: ''
+    },
+    mapSpec: {
+        gridRows: 5,
+        gridCols: 3,
+    },
+    blockSpec: {
+        size: 120,
+        gap: 12,
+        borderRadius: 10
+    },
+    containerSpec: {
+        width: 0,
+        height: 0,
+        backgroundWidth: 0,
+        backgroundHeight: 0,
+    }
+};
 
-const sizeParamsMatches = location.pathname.match(/^\/(\d{1,2})[x\/](\d{1,2})$/);
-if (sizeParamsMatches) {
-    GRID_ROWS = Math.min(Math.max(+sizeParamsMatches[1], 3), 15);
-    GRID_COLS = Math.min(Math.max(+sizeParamsMatches[2], 3), 15);
+const mapSizeParamsMatches = location.pathname.match(/^\/(\d{1,2})[x\/](\d{1,2})$/);
+if (mapSizeParamsMatches) {
+    config.mapSpec.gridRows = Math.min(Math.max(+mapSizeParamsMatches[1], 3), 15);
+    config.mapSpec.gridCols = Math.min(Math.max(+mapSizeParamsMatches[2], 3), 15);
 }
 
 const AVAILABLE_IMAGES: Record<string, number[]> = {
@@ -25,48 +45,33 @@ const AVAILABLE_IMAGES: Record<string, number[]> = {
 const modeImageMatches = location.pathname.match(/^\/mode\/image\/(.*)$/);
 let imageName = modeImageMatches ? modeImageMatches[1] : '';
 
-const useImageBackground = !!AVAILABLE_IMAGES[imageName];
-
-const imageUrl = useImageBackground ? `/images/${imageName}.jpg` : '';
-
-if (useImageBackground) {
-    GRID_ROWS = AVAILABLE_IMAGES[imageName][0];
-    GRID_COLS = AVAILABLE_IMAGES[imageName][1];
+if (AVAILABLE_IMAGES[imageName]) {
+    config.mode = MODE_IMAGE;
 }
 
-const {
-    BLOCK_SIZE, GAP,
-    BORDER_RADIUS,
-    BACKGROUND_HEIGHT_SIZE,
-    BACKGROUND_WIDTH_SIZE
-} = buildBlockSpec({
-    gridRows: GRID_ROWS,
-    gridCols: GRID_COLS,
-    containerPadding: PADDING,
-    useImageBackground: useImageBackground
-});
+if (config.mode == MODE_IMAGE) {
+    config.image.url = `/images/${imageName}.jpg`;
+    config.mapSpec.gridRows = AVAILABLE_IMAGES[imageName][0];
+    config.mapSpec.gridCols = AVAILABLE_IMAGES[imageName][1];
+}
 
-const { CONTAINER_HEIGHT, CONTAINER_WIDTH } = buildGameContainerSpec({
-    gridRows: GRID_ROWS,
-    gridCols: GRID_COLS,
-    containerPadding: PADDING,
-    blockSize: BLOCK_SIZE,
-    gap: GAP
-});
+config.blockSpec = buildBlockSpec(config.mode, config.mapSpec);
 
-const results = buildResultMap({
-    gridRows: GRID_ROWS,
-    gridCols: GRID_COLS,
-});
+config.containerSpec = buildGameContainerSpec(config.blockSpec, config.mapSpec);
 
-const { requiredData, shuffeData } = buildInitData({
-    gridRows: GRID_ROWS,
-    gridCols: GRID_COLS,
-});
+const results = buildResultMap(config.mapSpec);
+
+const { requiredData, shuffeData } = buildInitData(config.mapSpec);
 
 const { blocks, blockMaps } = generateValidBlocksState(results, requiredData, shuffeData);
 
 const blankBlock = ref<Cell>(blocks.value[0]);
+
+if (!blankBlock.value) {
+    alert('Error when init game!');
+    console.error('Missing blank block', blocks, blockMaps);
+    throw new Error('Missing blank block');
+}
 
 const keyboardKeyToActions: Record<string, number[]> = {
     'ArrowUp': [-1, 0],
@@ -79,19 +84,21 @@ const keyboardKeyToActions: Record<string, number[]> = {
     'a': [0, -1],
 };
 
-const moveCount = ref(0);
-
-const GAME_STATUS = ref(0);
-const GAME_STATUS_WIN = 200;
+const state = reactive({
+    status: STATUS_WAITING,
+    moveCount: 0,
+    startedAt: 0,
+    completedAt: 0,
+})
 
 function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1) {
-    if (GAME_STATUS.value == GAME_STATUS_WIN) {
+    if (state.status == STATUS_WIN) {
         return;
     }
 
-    if (!blankBlock.value) {
-        alert('Error');
-        return;
+    if (state.status == STATUS_WAITING) {
+        state.startedAt = Date.now();
+        state.status = STATUS_PLAYING;
     }
 
     let oldRow = blankBlock.value.row;
@@ -104,7 +111,7 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
         return;
     }
 
-    moveCount.value += increaseMove;
+    state.moveCount += increaseMove;
 
     let targetBlock = findBlock(newRow, newCol)!;
     targetBlock.col = oldCol;
@@ -114,9 +121,10 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
 
     if (isWin()) {
         setTimeout(() => {
-            alert(`Win (${moveCount.value} moves)`);
+            alert(`Win. Solve in ${millisecondsToStr(state.completedAt - state.startedAt)} with ${state.moveCount} moves`);
         }, 250);
-        GAME_STATUS.value = GAME_STATUS_WIN;
+        state.completedAt = Date.now();
+        state.status = STATUS_WIN;
     }
 }
 
@@ -130,13 +138,13 @@ function handleClickBlock(cell: Cell) {
         while (blankBlock.value.row != targetRow) {
             moveBlankBlock([targetRow > blankBlock.value.row ? 1 : -1, 0], 0);
         }
-        moveCount.value++;
+        state.moveCount++;
     } else if (cell.row == blankBlock.value?.row) {
         const targetCol = cell.col;
         while (blankBlock.value.col != targetCol) {
             moveBlankBlock([0, targetCol > blankBlock.value.col ? 1 : -1], 0);
         }
-        moveCount.value++;
+        state.moveCount++;
     }
 }
 
@@ -158,28 +166,30 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
 </script>
 
 <template>
-    <div class="game-container" :data-rows="GRID_ROWS" :data-cols="GRID_COLS"
-        :style="{width: `${GRID_COLS * (BLOCK_SIZE + GAP) + GAP}px`, fontSize: `${BLOCK_SIZE / 2}px`, marginTop: `${PADDING}px`}">
+    <div class="game-container" :data-rows="config.mapSpec.gridRows" :data-cols="config.mapSpec.gridCols"
+        :style="{width: `${config.containerSpec.width}px`, fontSize: `${config.blockSpec.size / 2}px`, marginTop: `${SCREEN_PADDING}px`}">
         <template v-for="rows in blockMaps">
             <template v-for="cell in rows">
                 <Block @click="handleClickBlock(cell)" :cell="cell"
-                    :is-correct="cell.value == results[cell.row][cell.col]" :width="BLOCK_SIZE" :gap="GAP"
-                    :border-radius="BORDER_RADIUS" :background-url="imageUrl"
-                    :background-width-size="BACKGROUND_WIDTH_SIZE" :background-height-size="BACKGROUND_HEIGHT_SIZE" />
+                    :is-correct="cell.value == results[cell.row][cell.col]" :size="config.blockSpec.size"
+                    :gap="config.blockSpec.gap" :border-radius="config.blockSpec.borderRadius"
+                    :background-url="config.image.url" :background-width="config.containerSpec.backgroundWidth"
+                    :background-height="config.containerSpec.backgroundHeight" />
             </template>
         </template>
 
         <div style="position:absolute;text-align:right;font-weight: bold;display:flex;" :style="{
-                right: `${GAP}px`, top: `${GAP}px`, fontSize: `${Math.min(24, BLOCK_SIZE / 3)}px`
+                right: `${config.blockSpec.gap}px`, top: `${config.blockSpec.gap}px`, fontSize: `${Math.min(24, config.blockSpec.size / 3)}px`
         }">
-            <div v-if="useImageBackground" style="margin-right: 15px;">
-                <ZoomableImage :full-width="CONTAINER_WIDTH" :full-height="CONTAINER_HEIGHT" :width="BLOCK_SIZE"
-                    :height="BLOCK_SIZE" :image="imageUrl" :placeholder="imageUrl" />
+            <div v-if="config.mode == MODE_IMAGE" style="margin-right: 15px;">
+                <ZoomableImage :full-width="config.containerSpec.width" :full-height="config.containerSpec.height"
+                    :width="config.blockSpec.size" :height="config.blockSpec.size" :image="config.image.url"
+                    :placeholder="config.image.url" />
             </div>
 
             <div>
                 <div>Moves</div>
-                <div>{{ moveCount }}</div>
+                <div>{{ state.moveCount }}</div>
             </div>
         </div>
     </div>

@@ -1,6 +1,7 @@
 import { ref, toRaw } from "vue";
 import { shuffle } from "../composables/helpers";
 import { Cell } from "../model/Cell";
+import { MODE_IMAGE, SCREEN_PADDING } from "./constants";
 
 export function buildInitData({ gridCols, gridRows }: { gridCols: number, gridRows: number }) {
     const requiredData: number[] = [0, 1];
@@ -42,48 +43,53 @@ export function generateValidBlocksState(results: number[][], requiredData: numb
 
 }
 
-export function buildGameContainerSpec({
-    gridCols,
-    gridRows,
-    blockSize,
-    gap,
-    containerPadding,
-}: {
-    gridCols: number,
-    gridRows: number,
-    blockSize: number,
-    gap: number,
-    containerPadding: number,
-}) {
-    const CONTAINER_WIDTH = gridCols * (blockSize + gap) + gap;
-    const CONTAINER_HEIGHT = (gridRows + 1) * (blockSize + gap) + gap;
+export function buildGameContainerSpec(
+    {
+        size,
+        gap
+    }: {
+        size: number,
+        gap: number,
+    },
+    {
+        gridCols,
+        gridRows,
+    }: {
+        gridCols: number,
+        gridRows: number,
+    }) {
+    const CONTAINER_WIDTH = gridCols * (size + gap) + gap;
+    const CONTAINER_HEIGHT = (gridRows + 1) * (size + gap) + gap;
 
-    return { CONTAINER_HEIGHT, CONTAINER_WIDTH };
+    const BACKGROUND_WIDTH = gridCols * size + gap * (gridCols - 1);
+    const BACKGROUND_HEIGHT = gridRows * size + gap * (gridRows - 1);
+
+    return {
+        height: CONTAINER_HEIGHT,
+        width: CONTAINER_WIDTH,
+        backgroundWidth: BACKGROUND_WIDTH,
+        backgroundHeight: BACKGROUND_HEIGHT,
+    };
 }
 
-export function buildBlockSpec({
+export function buildBlockSpec(gameMode: string, {
     gridCols,
     gridRows,
-    containerPadding,
-    useImageBackground
 }: {
     gridCols: number,
     gridRows: number,
-    containerPadding: number,
-    useImageBackground: boolean
 }) {
-    const maxSize = Math.max(gridCols, gridRows);
-    const GAP = useImageBackground ? 2 : (maxSize >= 12 ? 6 : (maxSize >= 8 ? 8 : 12));
-    const BORDER_RADIUS = useImageBackground ? 2 : 10;
+    const isImageMode = gameMode == MODE_IMAGE;
+    const maxGridSize = Math.max(gridCols, gridRows);
 
-    const maxWidth = (window.innerWidth - containerPadding * 2 - (gridCols + 1) * GAP) / gridCols;
-    const maxHeight = (window.innerHeight - containerPadding * 2 - (gridRows + 2) * GAP) / (gridRows + 1);
+    const GAP = isImageMode ? 2 : (maxGridSize >= 12 ? 6 : (maxGridSize >= 8 ? 8 : 12));
+    const BORDER_RADIUS = isImageMode ? 2 : 10;
+
+    const maxWidth = (window.innerWidth - SCREEN_PADDING * 2 - (gridCols + 1) * GAP) / gridCols;
+    const maxHeight = (window.innerHeight - SCREEN_PADDING * 2 - (gridRows + 2) * GAP) / (gridRows + 1);
     const BLOCK_SIZE = Math.min(120, maxWidth, maxHeight);
 
-    const BACKGROUND_WIDTH_SIZE = gridCols * BLOCK_SIZE + GAP * (gridCols - 1);
-    const BACKGROUND_HEIGHT_SIZE = gridRows * BLOCK_SIZE + GAP * (gridRows - 1);
-
-    return { BLOCK_SIZE, GAP, BORDER_RADIUS, BACKGROUND_HEIGHT_SIZE, BACKGROUND_WIDTH_SIZE };
+    return { size: BLOCK_SIZE, gap: GAP, borderRadius: BORDER_RADIUS };
 }
 
 function generateBlocksState(results: number[][], requiredData: number[], shuffeData: number[]) {
