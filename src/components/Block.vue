@@ -27,8 +27,8 @@ const isUseImage = !!backgroundUrl
         'block-blank': cell.value === 0
     }" :style="{
         position: 'absolute', 
-        left: `${cell.col * width + gap * (cell.col + 1)}px`,
-        top: `${cell.row * width + gap * (cell.row + 1)}px`, 
+        left: `${cell.col * width + (cell.col + 1) * gap}px`,
+        top: `${cell.row * width + (cell.row + 1) * gap}px`, 
         width: `${width}px`,
         height: `${width}px`,
         borderRadius: `${borderRadius}px`,
@@ -36,7 +36,7 @@ const isUseImage = !!backgroundUrl
         backgroundImage: isBlockItem && backgroundUrl ? `url(${backgroundUrl})` : undefined,
         backgroundSize: isBlockItem && backgroundWidthSize ? `${backgroundWidthSize}px ${backgroundHeightSize}px`: undefined,
         backgroundPositionX: `-${cell.correctCol * width + cell.correctCol * gap}px`,
-        backgroundPositionY: `-${(cell.correctRow - 1) * width + gap * (cell.correctRow - 1)}px`, 
+        backgroundPositionY: `-${(cell.correctRow - 1) * width + (cell.correctRow - 1) * gap}px`, 
     }" @click="$emit('click')" :data-value="cell.value">
         <span v-if="isBlockItem && !isUseImage">{{ cell.text }}</span>
     </div>
