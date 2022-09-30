@@ -8,7 +8,7 @@ const { placeholder, fullWidth, fullHeight, height, width } = defineProps<{
     width: number,
     height: number,
     fullWidth: number,
-    fullHeight: number,
+    fullHeight: number
 }>();
 
 const isZoomIn = ref<boolean>(false);

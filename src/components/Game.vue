@@ -1,21 +1,28 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { millisecondsToStr } from '../composables/helpers';
-import { SCREEN_PADDING, MODE_CLASSIC, MODE_IMAGE, STATUS_PLAYING, STATUS_WAITING, STATUS_WIN } from '../logic/constants';
+import { SCREEN_PADDING } from '../logic/constants';
 import { buildBlockSpec, buildGameContainerSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
-import { Cell } from '../model/Cell';
+import { Cell, GameConfig, GameMode, GameStatus, ImageModeConfig, MapSpec } from '../model/GameConfig';
 import Block from './Block.vue';
 import ZoomableImage from './ZoomableImage.vue';
 
-const config = {
-    mode: MODE_CLASSIC,
-    image: {
+const {
+    mode,
+    mapSpec,
+    image
+} = defineProps<{
+    mode: GameMode,
+    image?: ImageModeConfig,
+    mapSpec: MapSpec,
+}>();
+
+const config: GameConfig = {
+    mode: mode,
+    image: image || {
         url: ''
     },
-    mapSpec: {
-        gridRows: 5,
-        gridCols: 3,
-    },
+    mapSpec: mapSpec,
     blockSpec: {
         size: 120,
         gap: 12,
@@ -29,35 +36,8 @@ const config = {
     }
 };
 
-const mapSizeParamsMatches = location.pathname.match(/^\/(\d{1,2})[x\/](\d{1,2})$/);
-if (mapSizeParamsMatches) {
-    config.mapSpec.gridRows = Math.min(Math.max(+mapSizeParamsMatches[1], 3), 15);
-    config.mapSpec.gridCols = Math.min(Math.max(+mapSizeParamsMatches[2], 3), 15);
-}
-
-const AVAILABLE_IMAGES: Record<string, number[]> = {
-    'tranh-dong-ho': [5, 3],
-    'ban-do-viet-nam': [4, 3],
-    'iphone-14-pro-max': [6, 4],
-    'phong-canh-1': [5, 6],
-}
-
-const modeImageMatches = location.pathname.match(/^\/mode\/image\/(.*)$/);
-let imageName = modeImageMatches ? modeImageMatches[1] : '';
-
-if (AVAILABLE_IMAGES[imageName]) {
-    config.mode = MODE_IMAGE;
-}
-
-if (config.mode == MODE_IMAGE) {
-    config.image.url = `/images/${imageName}.jpg`;
-    config.mapSpec.gridRows = AVAILABLE_IMAGES[imageName][0];
-    config.mapSpec.gridCols = AVAILABLE_IMAGES[imageName][1];
-}
-
-config.blockSpec = buildBlockSpec(config.mode, config.mapSpec);
-
-config.containerSpec = buildGameContainerSpec(config.blockSpec, config.mapSpec);
+config.blockSpec = buildBlockSpec(config);
+config.containerSpec = buildGameContainerSpec(config);
 
 const results = buildResultMap(config.mapSpec);
 
@@ -84,21 +64,26 @@ const keyboardKeyToActions: Record<string, number[]> = {
     'a': [0, -1],
 };
 
-const state = reactive({
-    status: STATUS_WAITING,
+const state = reactive<{
+    status: GameStatus,
+    moveCount: number,
+    startedAt: number,
+    completedAt: number,
+}>({
+    status: GameStatus.WAITING,
     moveCount: 0,
     startedAt: 0,
     completedAt: 0,
 })
 
 function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1) {
-    if (state.status == STATUS_WIN) {
+    if (state.status == GameStatus.WIN) {
         return;
     }
 
-    if (state.status == STATUS_WAITING) {
+    if (state.status == GameStatus.WAITING) {
         state.startedAt = Date.now();
-        state.status = STATUS_PLAYING;
+        state.status = GameStatus.PLAYING;
     }
 
     let oldRow = blankBlock.value.row;
@@ -124,7 +109,7 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
             alert(`Win. Solve in ${millisecondsToStr(state.completedAt - state.startedAt)} with ${state.moveCount} moves`);
         }, 250);
         state.completedAt = Date.now();
-        state.status = STATUS_WIN;
+        state.status = GameStatus.WIN;
     }
 }
 
@@ -181,7 +166,7 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
         <div style="position:absolute;text-align:right;font-weight: bold;display:flex;" :style="{
                 right: `${config.blockSpec.gap}px`, top: `${config.blockSpec.gap}px`, fontSize: `${Math.min(24, config.blockSpec.size / 3)}px`
         }">
-            <div v-if="config.mode == MODE_IMAGE" style="margin-right: 15px;">
+            <div v-if="config.mode == GameMode.IMAGE" style="margin-right: 15px;">
                 <ZoomableImage :full-width="config.containerSpec.width" :full-height="config.containerSpec.height"
                     :width="config.blockSpec.size" :height="config.blockSpec.size" :image="config.image.url"
                     :placeholder="config.image.url" />

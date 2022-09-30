@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Cell } from '../model/Cell';
+import { Cell, CellType } from '../model/GameConfig';
 
 const { cell, backgroundUrl } = defineProps<{
     size: number,
@@ -21,7 +21,7 @@ const isUseImage = !!backgroundUrl
 
 <template>
     <div class="block" :class="{
-        'wall': cell.type == 'wall',
+        'wall': cell.type == CellType.WALL,
         'block-item': isBlockItem,
         'correct-position': isBlockItem && isCorrect,
         'block-blank': cell.value === 0
@@ -37,7 +37,7 @@ const isUseImage = !!backgroundUrl
         backgroundSize: isBlockItem && backgroundWidth ? `${backgroundWidth}px ${backgroundHeight}px`: undefined,
         backgroundPositionX: `-${cell.correctCol * size + cell.correctCol * gap}px`,
         backgroundPositionY: `-${(cell.correctRow - 1) * size + (cell.correctRow - 1) * gap}px`, 
-    }" @click="$emit('click')" :data-value="cell.value">
+    }" @click="$emit('click')" :data-value="cell.value" :data-current-row="cell.row" :data-current-col="cell.col">
         <span v-if="isBlockItem && !isUseImage">{{ cell.text }}</span>
     </div>
 </template>

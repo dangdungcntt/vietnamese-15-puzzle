@@ -3,5 +3,5 @@ import Game from './components/Game.vue'
 </script>
 
 <template>
-    <Game />
+    <router-view></router-view>
 </template>
