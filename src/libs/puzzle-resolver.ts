@@ -1,6 +1,6 @@
 
-export async function resolve() {
-    const DELAY = 10;
+export async function resolve(delay: string | undefined) {
+    const DELAY = isNaN(Number(delay)) ? 500 : Number(delay);
     const SAME_COLS = [Position.TOP, Position.NEXT_TO_TOP, Position.CENTER, Position.NEXT_TO_BOTTOM, Position.BOTTOM];
     const SAME_ROWS = [Position.LEFT, Position.NEXT_TO_LEFT, Position.CENTER, Position.NEXT_TO_RIGHT, Position.RIGHT];
     const LEFT_SIDES = [Position.TOP_LEFT, Position.NEXT_TO_LEFT, Position.LEFT, Position.BOTTOM_LEFT];

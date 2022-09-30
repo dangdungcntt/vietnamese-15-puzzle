@@ -42,7 +42,8 @@ const config: GameConfig = {
 
 onMounted(() => {
     if (route.query.auto_resolve) {
-        PuzzleResolver.resolve();
+
+        PuzzleResolver.resolve(route.query.auto_resolve_delay as string);
     }
 })
 
