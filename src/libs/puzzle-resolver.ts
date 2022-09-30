@@ -32,86 +32,88 @@ export async function resolve(delay: string | undefined) {
     let processingBlock: BlockWrapper | null = null;
     let ignoredBlock: Record<string, boolean> = {};
 
-    const _9bl = blocks.find(it => it.value == 9)!;
-    const _8bl = blocks.find(it => it.value == 8)!;
-    const _7bl = blocks.find(it => it.value == 7)!;
-    const _6bl = blocks.find(it => it.value == 6)!;
-    const _5bl = blocks.find(it => it.value == 5)!;
-    const _4bl = blocks.find(it => it.value == 4)!;
-    const _3bl = blocks.find(it => it.value == 3)!;
+    for (let i = gameConfig.rows - 1; i > 2; i--) {
+        for (let j = gameConfig.cols - 1; j >= 2; j--) {
+            const block = blocks.find(it => it.correctRow == i && it.correctCol == j)!;
+            console.log(`Moving ${block.value} to ${[block.correctRow, block.correctCol]}`);
+            await moveBlockToPosition(block, [block.correctRow, block.correctCol]);
+            block.markFrezee();
+        }
+
+        const fisrtBlock = blocks.find(it => it.correctRow == i && it.correctCol == 0)!;
+        const secondBlock = blocks.find(it => it.correctRow == i && it.correctCol == 1)!;
+
+        await moveBlockToPosition(fisrtBlock, [secondBlock.correctRow, secondBlock.correctCol]);
+        fisrtBlock.markFrezee();
+
+        let success = await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 1, secondBlock.correctCol]);
+        if (!success) {
+            fisrtBlock.unFrezee();
+
+            await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 2, secondBlock.correctCol]);
+            secondBlock.markFrezee();
+
+            await moveBlockToPosition(fisrtBlock, [secondBlock.correctRow, secondBlock.correctCol]);
+            fisrtBlock.markFrezee();
+
+            secondBlock.unFrezee();
+            await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 1, secondBlock.correctCol]);
+        }
+
+        secondBlock.markFrezee();
+        fisrtBlock.unFrezee();
+
+        await moveBlockToPosition(fisrtBlock, [fisrtBlock.correctRow, fisrtBlock.correctCol]);
+        fisrtBlock.markFrezee();
+        secondBlock.unFrezee();
+
+        await moveBlockToPosition(secondBlock, [secondBlock.correctRow, secondBlock.correctCol]);
+        secondBlock.markFrezee();
+    }
+
+    for (let j = gameConfig.cols - 1; j > 1; j--) {
+        const firstBlock = blocks.find(it => it.correctRow == 1 && it.correctCol == j)!;
+        const secondBlock = blocks.find(it => it.correctRow == 2 && it.correctCol == j)!;
+        await moveBlockToPosition(secondBlock, [firstBlock.correctRow, firstBlock.correctCol]);
+        secondBlock.markFrezee();
+
+        let success = await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol - 1]);
+        if (!success) {
+            secondBlock.unFrezee();
+            await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol - 2]);
+            firstBlock.markFrezee();
+            secondBlock.unFrezee();
+            await moveBlockToPosition(secondBlock, [firstBlock.correctRow, firstBlock.correctCol]);
+            secondBlock.markFrezee();
+            firstBlock.unFrezee();
+            await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol - 1]);
+        }
+        firstBlock.markFrezee();
+        secondBlock.unFrezee();
+
+        await moveBlockToPosition(secondBlock, [secondBlock.correctRow, secondBlock.correctCol]);
+        secondBlock.markFrezee();
+        firstBlock.unFrezee();
+
+        await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol]);
+        firstBlock.markFrezee();
+    }
+
     const _2bl = blocks.find(it => it.value == 2)!;
-    const _1bl = blocks.find(it => it.value == 1)!;
-
-    let success: boolean | void = false;
-
-    await moveBlockToPosition(_9bl, [_9bl.correctRow, _9bl.correctCol]);
-    _9bl.markFrezee();
-
-    await moveBlockToPosition(_7bl, [_8bl.correctRow, _8bl.correctCol]);
-    _7bl.markFrezee();
-
-    success = await moveBlockToPosition(_8bl, [_5bl.correctRow, _5bl.correctCol]);
-    console.log('Move 8 to 5 ' + success);
-
-    if (!success) {
-        _7bl.unFrezee();
-
-        await moveBlockToPosition(_8bl, [_1bl.correctRow, _1bl.correctCol]);
-        _8bl.markFrezee();
-
-        await moveBlockToPosition(_7bl, [_8bl.correctRow, _8bl.correctCol]);
-        _7bl.markFrezee();
-
-        _8bl.unFrezee();
-        await moveBlockToPosition(_8bl, [_5bl.correctRow, _5bl.correctCol]);
-    }
-    _8bl.markFrezee();
-    _7bl.unFrezee();
-
-    await moveBlockToPosition(_7bl, [_7bl.correctRow, _7bl.correctCol]);
-    _7bl.markFrezee();
-    _8bl.unFrezee();
-
-    await moveBlockToPosition(_8bl, [_8bl.correctRow, _8bl.correctCol]);
-    _8bl.markFrezee();
-
-    console.log('Done row 1');
-
-    await moveBlockToPosition(_6bl, [_3bl.correctRow, _3bl.correctCol]);
-    _6bl.markFrezee();
-
-    success = false;
-    success = await moveBlockToPosition(_3bl, [_2bl.correctRow, _2bl.correctCol]);
-    if (!success) {
-        _6bl.unFrezee();
-        await moveBlockToPosition(_3bl, [_1bl.correctRow, _1bl.correctCol]);
-        _3bl.markFrezee();
-        _6bl.unFrezee();
-        await moveBlockToPosition(_6bl, [_3bl.correctRow, _3bl.correctCol]);
-        _6bl.markFrezee();
-        _3bl.unFrezee();
-        await moveBlockToPosition(_3bl, [_2bl.correctRow, _2bl.correctCol]);
-    }
-    _3bl.markFrezee();
-    _6bl.unFrezee();
-    await moveBlockToPosition(_6bl, [_6bl.correctRow, _6bl.correctCol]);
-    _6bl.markFrezee();
-    _3bl.unFrezee();
-
-    await moveBlockToPosition(_3bl, [_3bl.correctRow, _3bl.correctCol]);
-    _3bl.markFrezee();
-
     await moveBlockToPosition(_2bl, [_2bl.correctRow, _2bl.correctCol]);
-    _3bl.markFrezee();
+    _2bl.markFrezee();
 
+    const _5bl = blocks.find(it => it.value == 5)!;
     await moveBlockToPosition(_5bl, [_5bl.correctRow, _5bl.correctCol]);
     _5bl.markFrezee();
 
+    const _4bl = blocks.find(it => it.value == 4)!;
     await moveBlockToPosition(_4bl, [_4bl.correctRow, _4bl.correctCol]);
     _4bl.markFrezee();
 
+    const _1bl = blocks.find(it => it.value == 1)!;
     await moveBlockToPosition(_1bl, [_1bl.correctRow, _1bl.correctCol]);
-
+    _1bl.markFrezee();
 
     async function moveBlockToPosition(block: BlockWrapper, targetPosition: PairNumber): Promise<boolean> {
         processingBlock = block;
@@ -147,6 +149,7 @@ export async function resolve(delay: string | undefined) {
 
             if (blank_block_p == Position.NEXT_TO_BOTTOM) {
                 //Ô trống đứng bên dưới ô mục tiêu
+
                 if (TOP_SIDES.includes(block_target_p)) {
                     await move(Move.UP);
                 } else {
@@ -214,7 +217,7 @@ export async function resolve(delay: string | undefined) {
                 }
                 break;
             case Position.TOP_RIGHT:
-                success = await tryMove(BOTTOM_SIDES.includes(block_target_p) ? Move.LEFT : Move.DOWN, [Move.LEFT, Move.DOWN, Move.UP, Move.RIGTH], markIgnoredCurrentBlankBlock);
+                success = await tryMove(BOTTOM_SIDES.includes(block_target_p) || RIGHT_SIDES.includes(block_target_p) ? Move.LEFT : Move.DOWN, [Move.LEFT, Move.DOWN, Move.UP, Move.RIGTH], markIgnoredCurrentBlankBlock);
                 if (!success) {
                     console.log(`Cannot find next step where ${Position.TOP_RIGHT}`);
                 }
@@ -226,7 +229,7 @@ export async function resolve(delay: string | undefined) {
                 }
                 break;
             case Position.BOTTOM_RIGHT:
-                success = await tryMove(TOP_SIDES.includes(block_target_p) ? Move.LEFT : Move.UP, [Move.LEFT, Move.UP, Move.RIGTH, Move.DOWN], markIgnoredCurrentBlankBlock);
+                success = await tryMove(TOP_SIDES.includes(block_target_p) || RIGHT_SIDES.includes(block_target_p) ? Move.LEFT : Move.UP, [Move.LEFT, Move.UP, Move.RIGTH, Move.DOWN], markIgnoredCurrentBlankBlock);
                 if (!success) {
                     console.log(`Cannot find next step where ${Position.BOTTOM_RIGHT}`);
                 }
@@ -243,9 +246,9 @@ export async function resolve(delay: string | undefined) {
 
     function markIgnoredCurrentBlankBlock(blankBlockPosition: PairNumber) {
         if (processingBlock) {
-            console.log(`markIgnore ${processingBlock.value}-${processingBlock.row}-${processingBlock.col}--${blankBlockPosition[0]}-${blankBlockPosition[1]}`);
+            console.log(`markIgnore ${processingBlock.value} - ${processingBlock.row} - ${processingBlock.col}--${blankBlockPosition[0]} - ${blankBlockPosition[1]}`);
 
-            ignoredBlock[`${processingBlock.value}-${processingBlock.row}-${processingBlock.col}--${blankBlockPosition[0]}-${blankBlockPosition[1]}`] = true;
+            ignoredBlock[`${processingBlock.value} - ${processingBlock.row} - ${processingBlock.col}--${blankBlockPosition[0]} - ${blankBlockPosition[1]}`] = true;
         }
     }
 
@@ -283,7 +286,7 @@ export async function resolve(delay: string | undefined) {
                 return;
             }
 
-            if (processingBlock && ignoredBlock[`${processingBlock.value}-${processingBlock.row}-${processingBlock.col}--${targetBlock[0]}-${targetBlock[1]}`]) {
+            if (processingBlock && ignoredBlock[`${processingBlock.value} - ${processingBlock.row} - ${processingBlock.col}--${targetBlock[0]} - ${targetBlock[1]}`]) {
                 console.log(`Move: -1 or frezee ${targetBlock}`);
                 resolve(false);
                 return;

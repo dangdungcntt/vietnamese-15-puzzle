@@ -43,7 +43,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    transition: left 150ms ease 0s, top 150ms ease 0s;
+    transition: left 100ms ease 0s, top 100ms ease 0s;
 }
 
 .block.block-blank {
