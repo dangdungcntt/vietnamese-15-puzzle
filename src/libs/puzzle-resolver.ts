@@ -99,17 +99,10 @@ export async function resolve(delay: string | undefined) {
         firstBlock.markFrezee();
     }
 
+    //Còn lại 4 ô nhưng chỉ cần gọi hàm xếp ô số 2 và ô số 1 thì các ô còn lại sẽ tự đúng vị trí
     const _2bl = blocks.find(it => it.value == 2)!;
     await moveBlockToPosition(_2bl, [_2bl.correctRow, _2bl.correctCol]);
     _2bl.markFrezee();
-
-    const _5bl = blocks.find(it => it.value == 5)!;
-    await moveBlockToPosition(_5bl, [_5bl.correctRow, _5bl.correctCol]);
-    _5bl.markFrezee();
-
-    const _4bl = blocks.find(it => it.value == 4)!;
-    await moveBlockToPosition(_4bl, [_4bl.correctRow, _4bl.correctCol]);
-    _4bl.markFrezee();
 
     const _1bl = blocks.find(it => it.value == 1)!;
     await moveBlockToPosition(_1bl, [_1bl.correctRow, _1bl.correctCol]);
@@ -246,8 +239,6 @@ export async function resolve(delay: string | undefined) {
 
     function markIgnoredCurrentBlankBlock(blankBlockPosition: PairNumber) {
         if (processingBlock) {
-            console.log(`markIgnore ${processingBlock.value} - ${processingBlock.row} - ${processingBlock.col}--${blankBlockPosition[0]} - ${blankBlockPosition[1]}`);
-
             ignoredBlock[`${processingBlock.value} - ${processingBlock.row} - ${processingBlock.col}--${blankBlockPosition[0]} - ${blankBlockPosition[1]}`] = true;
         }
     }
