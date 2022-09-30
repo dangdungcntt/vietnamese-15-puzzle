@@ -18,7 +18,7 @@ const {
 }>();
 
 const config: GameConfig = {
-    mode: mode,
+    mode,
     image: image || {
         url: ''
     },
