@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
+import * as PuzzleResolver from '../libs/puzzle-resolver';
 import { millisecondsToStr } from '../composables/helpers';
 import { SCREEN_PADDING } from '../logic/constants';
 import { buildBlockSpec, buildGameContainerSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
 import { Cell, GameConfig, GameMode, GameStatus, ImageModeConfig, MapSpec } from '../model/GameConfig';
 import Block from './Block.vue';
 import ZoomableImage from './ZoomableImage.vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 
 const {
     mode,
@@ -35,6 +39,12 @@ const config: GameConfig = {
         backgroundHeight: 0,
     }
 };
+
+onMounted(() => {
+    if (route.query.auto_resolve) {
+        PuzzleResolver.resolve();
+    }
+})
 
 config.blockSpec = buildBlockSpec(config);
 config.containerSpec = buildGameContainerSpec(config);
@@ -106,8 +116,13 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
 
     if (isWin()) {
         setTimeout(() => {
-            alert(`Win. Solve in ${millisecondsToStr(state.completedAt - state.startedAt)} with ${state.moveCount} moves`);
-        }, 250);
+            if (!route.query.disable_win_alert) {
+                alert(`Win. Solve in ${millisecondsToStr(state.completedAt - state.startedAt)} with ${state.moveCount} moves`);
+            }
+            if (route.query.auto_reload) {
+                location.reload();
+            }
+        }, 500);
         state.completedAt = Date.now();
         state.status = GameStatus.WIN;
     }
