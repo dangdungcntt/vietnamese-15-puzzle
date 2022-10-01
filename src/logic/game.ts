@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { shuffle } from "../composables/helpers";
-import { BlockSpec, Cell, CellType, GameConfig, GameMode, MapSpec } from "../model/GameConfig";
+import Cell from "../model/Cell";
+import { BlockConfig, BlockSpec, CellType, GameConfig, GameMode, MapSpec } from "../model/GameConfig";
 import { SCREEN_PADDING } from "./constants";
 
 export function buildInitData({ gridCols, gridRows }: MapSpec) {
@@ -41,10 +42,9 @@ export function generateValidBlocksState(results: number[][], requiredData: numb
     } while (!isSolvable(blockMaps));
 
     return { blockMaps, blocks };
-
 }
 
-export function buildGameContainerSpec({ blockSpec, mapSpec }: GameConfig) {
+export function buildGameContainerSpec({ blockSpec, mapSpec }: { blockSpec: BlockSpec, mapSpec: MapSpec }) {
     const CONTAINER_WIDTH = mapSpec.gridCols * (blockSpec.size + blockSpec.gap) + blockSpec.gap;
     const CONTAINER_HEIGHT = (mapSpec.gridRows + 1) * (blockSpec.size + blockSpec.gap) + blockSpec.gap;
 
@@ -59,29 +59,33 @@ export function buildGameContainerSpec({ blockSpec, mapSpec }: GameConfig) {
     };
 }
 
-export function buildBlockSpec({ mode, mapSpec }: GameConfig, overrideConfig?: BlockSpec) {
+export function buildBlockConfig({ mode, mapSpec }: { mode: GameMode, mapSpec: MapSpec }, overrideConfig?: BlockSpec) {
     const isImageMode = mode == GameMode.IMAGE;
     const maxGridSize = Math.max(mapSpec.gridCols, mapSpec.gridRows);
 
     const GAP = overrideConfig ? overrideConfig.gap : (isImageMode ? 2 : (maxGridSize >= 12 ? 6 : (maxGridSize >= 8 ? 8 : 12)));
     const BORDER_RADIUS = overrideConfig ? overrideConfig.borderRadius : (isImageMode ? 2 : 10);
 
-    const maxWidth = (window.innerWidth - SCREEN_PADDING * 2 - (mapSpec.gridCols + 1) * GAP) / mapSpec.gridCols;
-    const maxHeight = (window.innerHeight - SCREEN_PADDING * 2 - (mapSpec.gridRows + 2) * GAP) / (mapSpec.gridRows + 1);
+    return { gap: GAP, borderRadius: BORDER_RADIUS };
+}
+
+export function buildBlockSpec({ blockConfig, mapSpec }: { blockConfig: BlockConfig, mapSpec: MapSpec }) {
+    const maxWidth = (window.innerWidth - SCREEN_PADDING * 2 - (mapSpec.gridCols + 1) * blockConfig.gap) / mapSpec.gridCols;
+    const maxHeight = (window.innerHeight - SCREEN_PADDING * 2 - (mapSpec.gridRows + 2) * blockConfig.gap) / (mapSpec.gridRows + 1);
     const BLOCK_SIZE = Math.min(220, maxWidth, maxHeight);
 
-    return { size: BLOCK_SIZE, gap: GAP, borderRadius: BORDER_RADIUS };
+    return { size: BLOCK_SIZE, gap: blockConfig.gap, borderRadius: blockConfig.borderRadius };
 }
 
 function generateBlocksState(results: number[][], requiredData: number[], shuffeData: number[]) {
     const blocks = ref<Cell[]>([...requiredData, ...shuffle(shuffeData)].map(value => {
-        return {
+        return new Cell({
             type: CellType.BLOCK,
             value: value,
             text: value?.toString(),
             row: 0,
             col: 0
-        } as Cell
+        } as Cell)
     }));
 
     const blockMaps: Cell[][] = [];
@@ -91,7 +95,7 @@ function generateBlocksState(results: number[][], requiredData: number[], shuffe
         let row = [];
         for (let j = 0; j < results[i].length; j++) {
             if (results[i][j] == -1) {
-                row.push({ type: CellType.WALL, value: -1, row: i, col: j } as Cell);
+                row.push(new Cell({ type: CellType.WALL, value: -1, row: i, col: j } as Cell));
                 continue;
             }
             let cell = blocks.value[takenBlockIndex++];
@@ -113,6 +117,9 @@ function generateBlocksState(results: number[][], requiredData: number[], shuffe
 }
 
 function convertValueToCorrectPosition(value: number, { gridCols }: MapSpec) {
+    if (value == 0) {
+        return [0, 0];
+    }
     return [
         value % gridCols == 0 ? value / gridCols : (Math.floor(value / gridCols) + 1),
         value % gridCols == 0 ? gridCols - 1 : (value % gridCols - 1)

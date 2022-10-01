@@ -1,42 +1,39 @@
 <script setup lang="ts">
-import { Cell, CellType } from '../model/GameConfig';
+import Cell from '../model/Cell';
+import { BlockSpec, ContainerSpec } from '../model/GameConfig';
 
 const { cell, backgroundUrl } = defineProps<{
-    size: number,
-    gap: number,
     cell: Cell,
-    isCorrect: boolean,
-    borderRadius: number,
+    blockSpec: BlockSpec,
     backgroundUrl?: string,
-    backgroundWidth?: number
-    backgroundHeight?: number
+    containerSpec: ContainerSpec,
 }>();
 
 defineEmits(['click']);
 
-const isBlockItem = cell.value > 0;
+const isBlockItem = cell.isBlockItem;
 const isUseImage = !!backgroundUrl
 
 </script>
 
 <template>
     <div class="block" :class="{
-        'wall': cell.type == CellType.WALL,
+        'wall': cell.isWall,
         'block-item': isBlockItem,
-        'correct-position': isBlockItem && isCorrect,
-        'block-blank': cell.value === 0
+        'correct-position': isBlockItem && cell.isCorrect,
+        'block-blank': cell.isBlockBlank
     }" :style="{
         position: 'absolute', 
-        left: `${cell.col * size + (cell.col + 1) * gap}px`,
-        top: `${cell.row * size + (cell.row + 1) * gap}px`, 
-        width: `${size}px`,
-        height: `${size}px`,
-        borderRadius: `${borderRadius}px`,
+        left: `${cell.col * blockSpec.size + (cell.col + 1) * blockSpec.gap}px`,
+        top: `${cell.row * blockSpec.size + (cell.row + 1) * blockSpec.gap}px`, 
+        width: `${blockSpec.size}px`,
+        height: `${blockSpec.size}px`,
+        borderRadius: `${blockSpec.borderRadius}px`,
         backgroundRepeat: 'no-repeat',
         backgroundImage: isBlockItem && backgroundUrl ? `url(${backgroundUrl})` : undefined,
-        backgroundSize: isBlockItem && backgroundWidth ? `${backgroundWidth}px ${backgroundHeight}px`: undefined,
-        backgroundPositionX: `-${cell.correctCol * size + cell.correctCol * gap}px`,
-        backgroundPositionY: `-${(cell.correctRow - 1) * size + (cell.correctRow - 1) * gap}px`, 
+        backgroundSize: isBlockItem && containerSpec.backgroundWidth ? `${containerSpec.backgroundWidth}px ${containerSpec.backgroundHeight}px`: undefined,
+        backgroundPositionX: `-${cell.correctCol * blockSpec.size + cell.correctCol * blockSpec.gap}px`,
+        backgroundPositionY: `-${(cell.correctRow - 1) * blockSpec.size + (cell.correctRow - 1) * blockSpec.gap}px`, 
     }" @click="$emit('click')" :data-value="cell.value" :data-current-row="cell.row" :data-current-col="cell.col">
         <span v-if="isBlockItem && !isUseImage">{{ cell.text }}</span>
     </div>

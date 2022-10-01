@@ -3,7 +3,7 @@ export enum GameMode {
 }
 
 export enum GameStatus {
-    WAITING = 'WAITING', PLAYING = 'PLAYING', WIN = 'WIN'
+    WAITING = 'WAITING', PLAYING = 'PLAYING', WIN = 'WIN', PAUSED = 'PAUSED'
 }
 
 export type ImageModeConfig = {
@@ -13,6 +13,11 @@ export type ImageModeConfig = {
 export type MapSpec = {
     gridRows: number,
     gridCols: number,
+}
+
+export type BlockConfig = {
+    gap: number,
+    borderRadius: number,
 }
 
 export type BlockSpec = {
@@ -32,20 +37,9 @@ export type GameConfig = {
     mode: GameMode,
     image: ImageModeConfig,
     mapSpec: MapSpec,
-    blockSpec: BlockSpec,
-    containerSpec: ContainerSpec
+    blockConfig: BlockConfig,
 }
 
 export enum CellType {
     WALL = 'WALL', BLOCK = 'BLOCK'
-}
-
-export type Cell = {
-    type: CellType;
-    value: number,
-    text?: string,
-    row: number,
-    col: number,
-    correctRow: number,
-    correctCol: number,
 }
