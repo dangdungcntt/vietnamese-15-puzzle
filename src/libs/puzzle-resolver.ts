@@ -1,5 +1,12 @@
-
+let status = 0;
 export async function resolve(delay: string | undefined) {
+    if (status == 1) {
+        //Stop
+        console.log('Stopped. An error will throw soon.')
+        status = 0;
+        return;
+    }
+    status = 1;
     const DELAY = isNaN(Number(delay)) ? 500 : Number(delay);
     const SAME_COLS = [Position.TOP, Position.NEXT_TO_TOP, Position.CENTER, Position.NEXT_TO_BOTTOM, Position.BOTTOM];
     const SAME_ROWS = [Position.LEFT, Position.NEXT_TO_LEFT, Position.CENTER, Position.NEXT_TO_RIGHT, Position.RIGHT];
@@ -8,8 +15,6 @@ export async function resolve(delay: string | undefined) {
     const TOP_SIDES = [Position.TOP_LEFT, Position.NEXT_TO_TOP, Position.TOP, Position.TOP_RIGHT];
     const BOTTOM_SIDES = [Position.BOTTOM_LEFT, Position.NEXT_TO_BOTTOM, Position.BOTTOM, Position.BOTTOM_RIGHT];
 
-    console.clear();
-    console.log('Resolving...');
     const gameContainer: HTMLDivElement = document.querySelector('.game-container')!;
     const gameConfig = new GameConfig(
         parseInt(gameContainer.dataset['rows']!) + 1,
@@ -27,6 +32,16 @@ export async function resolve(delay: string | undefined) {
         map[it.row][it.col] = it;
     });
 
+    if (blocks.filter(it => !it.isCorrect).length == 0) {
+        console.log('All block is correct. Stop.');
+        status = 0;
+        return;
+    }
+
+    let start = Date.now();
+    console.clear();
+    console.log('Resolving...');
+
     const blankBlock = blocks.find(el => el.value == 0)!;
 
     let processingBlock: BlockWrapper | null = null;
@@ -42,6 +57,10 @@ export async function resolve(delay: string | undefined) {
 
         const fisrtBlock = blocks.find(it => it.correctRow == i && it.correctCol == 0)!;
         const secondBlock = blocks.find(it => it.correctRow == i && it.correctCol == 1)!;
+
+        if (fisrtBlock.isCorrect && secondBlock.isCorrect) {
+            continue;
+        }
 
         await moveBlockToPosition(fisrtBlock, [secondBlock.correctRow, secondBlock.correctCol]);
         fisrtBlock.markFrezee();
@@ -74,6 +93,11 @@ export async function resolve(delay: string | undefined) {
     for (let j = gameConfig.cols - 1; j > 1; j--) {
         const firstBlock = blocks.find(it => it.correctRow == 1 && it.correctCol == j)!;
         const secondBlock = blocks.find(it => it.correctRow == 2 && it.correctCol == j)!;
+
+        if (firstBlock.isCorrect && secondBlock.isCorrect) {
+            continue;
+        }
+
         await moveBlockToPosition(secondBlock, [firstBlock.correctRow, firstBlock.correctCol]);
         secondBlock.markFrezee();
 
@@ -108,7 +132,13 @@ export async function resolve(delay: string | undefined) {
     await moveBlockToPosition(_1bl, [_1bl.correctRow, _1bl.correctCol]);
     _1bl.markFrezee();
 
+    status = 0;
+    console.log(`Resolved in ${(Date.now() - start) / 1000}s`);
+
     async function moveBlockToPosition(block: BlockWrapper, targetPosition: PairNumber): Promise<boolean> {
+        if (status !== 1) {
+            throw new Error('puzzle-resolver: Invalid status');
+        }
         processingBlock = block;
         const block_target_p = calculateRelativePosition([block.row, block.col], targetPosition);
 
@@ -478,6 +508,10 @@ class BlockWrapper {
 
     public get correctCol(): number {
         return this.cCol;
+    }
+
+    public get isCorrect(): boolean {
+        return this.row === this.cRow && this.col === this.cCol;
     }
 }
 

@@ -13,6 +13,7 @@
 - [x] Image mode
 - [x] Show mini image in image mode (click to toggle zoom in/out)
 - [x] Auto solve tool: support all map size. Just add query string `auto_solve=1`
+- [x] Show timer
 - [ ] Game room mode (enter pin, name, restrict click move to nearest neighborhood)
 - [ ] Game room score board (web socket)
 - [ ] Menu list map of image mode

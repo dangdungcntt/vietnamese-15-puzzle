@@ -1,25 +1,19 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 import * as PuzzleResolver from '../libs/puzzle-resolver';
-import { millisecondsToStr } from '../composables/helpers';
+import { formatDuration, millisecondsToStr } from '../composables/helpers';
 import { SCREEN_PADDING } from '../logic/constants';
-import { buildBlockSpec, buildGameContainerSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
-import { Cell, GameConfig, GameMode, GameStatus, ImageModeConfig, MapSpec } from '../model/GameConfig';
+import { buildBlockConfig, buildBlockSpec, buildGameContainerSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
+import { BlockSpec, ContainerSpec, GameConfig, GameMode, GameStatus, ImageModeConfig, MapSpec } from '../model/GameConfig';
 import Block from './Block.vue';
 import ZoomableImage from './ZoomableImage.vue';
 import { useRoute } from 'vue-router';
+import { computed } from '@vue/reactivity';
+import Cell from '../model/Cell';
 
 const route = useRoute();
 
-const {
-    mode,
-    mapSpec,
-    image
-} = defineProps<{
-    mode: GameMode,
-    image?: ImageModeConfig,
-    mapSpec: MapSpec,
-}>();
+const { mode, mapSpec, image } = defineProps<{ mode: GameMode, image?: ImageModeConfig, mapSpec: MapSpec }>();
 
 const config = reactive<GameConfig>({
     mode,
@@ -27,33 +21,12 @@ const config = reactive<GameConfig>({
         url: ''
     },
     mapSpec: mapSpec,
-    blockSpec: {
-        size: 120,
-        gap: 12,
-        borderRadius: 10
-    },
-    containerSpec: {
-        width: 0,
-        height: 0,
-        backgroundWidth: 0,
-        backgroundHeight: 0,
-    }
+    blockConfig: buildBlockConfig({ mode, mapSpec })
 });
 
-onMounted(() => {
-    if (route.query.auto_resolve) {
-        if (!route.query.auto_resolve_on_click) {
-            PuzzleResolver.resolve(route.query.auto_resolve_delay as string);
-        } else {
-            document.querySelector('.moves-text')?.addEventListener('click', function () {
-                PuzzleResolver.resolve(route.query.auto_resolve_delay as string);
-            })
-        }
-    }
-})
+const blockSpec = computed<BlockSpec>(() => buildBlockSpec(config))
 
-config.blockSpec = buildBlockSpec(config);
-config.containerSpec = buildGameContainerSpec(config);
+const containerSpec = computed<ContainerSpec>(() => buildGameContainerSpec({ blockSpec: blockSpec.value, mapSpec: config.mapSpec }))
 
 const results = buildResultMap(config.mapSpec);
 
@@ -84,12 +57,75 @@ const state = reactive<{
     status: GameStatus,
     moveCount: number,
     startedAt: number,
+    resumedAt: number,
+    currentTime: number,
+    playedTime: number,
     completedAt: number,
+    currentTimeItv: number,
 }>({
     status: GameStatus.WAITING,
     moveCount: 0,
     startedAt: 0,
+    resumedAt: 0,
+    currentTime: 0,
+    playedTime: 0,
     completedAt: 0,
+    currentTimeItv: 0,
+});
+
+const isWin = computed(() => {
+    return blocks.value.filter(it => it.isCorrect).length == blocks.value.length
+});
+
+const timer = computed<string>(() => {
+    if (state.status === GameStatus.WAITING) {
+        return formatDuration(0);
+    }
+
+    if (state.status === GameStatus.PLAYING) {
+        return formatDuration(state.playedTime + (state.currentTime - state.resumedAt));
+    }
+
+    return formatDuration(state.playedTime);
+});
+
+function togglePlayPauseGame() {
+    if (state.status === GameStatus.PAUSED) {
+        state.status = GameStatus.PLAYING;
+        return;
+    }
+
+    if (state.status === GameStatus.PLAYING) {
+        state.status = GameStatus.PAUSED;
+        return;
+    }
+}
+
+watch(() => state.status, (newStatus: GameStatus, oldStatus: GameStatus) => {
+    if (newStatus === GameStatus.PAUSED || newStatus === GameStatus.WIN) {
+        console.log('Paused game timer');
+        clearInterval(state.currentTimeItv);
+        state.playedTime += Date.now() - state.resumedAt;
+        return;
+    }
+
+    if (newStatus === GameStatus.PLAYING) {
+        console.log('start PLAYING - old status: ' + oldStatus);
+
+        if (oldStatus === GameStatus.WAITING) {
+            state.startedAt = Date.now();
+            state.resumedAt = Date.now();
+        }
+
+        if (oldStatus === GameStatus.PAUSED) {
+            state.resumedAt = Date.now();
+        }
+
+        state.currentTime = Date.now();
+        state.currentTimeItv = setInterval(() => {
+            state.currentTime = Date.now();
+        }, 1000);
+    }
 })
 
 function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1) {
@@ -97,10 +133,7 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
         return;
     }
 
-    if (state.status == GameStatus.WAITING) {
-        state.startedAt = Date.now();
-        state.status = GameStatus.PLAYING;
-    }
+    state.status = GameStatus.PLAYING;
 
     let oldRow = blankBlock.value.row;
     let oldCol = blankBlock.value.col;
@@ -120,7 +153,7 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
     blankBlock.value.row = newRow;
     blankBlock.value.col = newCol;
 
-    if (isWin()) {
+    if (isWin.value) {
         setTimeout(() => {
             if (!route.query.disable_win_alert) {
                 alert(`Win. Solve in ${millisecondsToStr(state.completedAt - state.startedAt)} with ${state.moveCount} moves`);
@@ -132,8 +165,8 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
         state.completedAt = Date.now();
         state.status = GameStatus.WIN;
         if (config.mode == GameMode.IMAGE) {
-            config.blockSpec = buildBlockSpec(config, { gap: 0, borderRadius: 0, size: 0 })
-            config.containerSpec = buildGameContainerSpec(config)
+            config.blockConfig.gap = 0;
+            config.blockConfig.borderRadius = 0;
         }
     }
 }
@@ -162,10 +195,6 @@ function findBlock(row: number, col: number) {
     return blocks.value.find((it) => it.row == row && it.col == col)
 }
 
-function isWin() {
-    return blocks.value.filter(it => it.value == results[it.row][it.col]).length == blocks.value.length
-}
-
 window.document.addEventListener('keydown', function handleKeypress(e: KeyboardEvent) {
     if (!keyboardKeyToActions[e.key]) {
         return;
@@ -173,31 +202,46 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
     moveBlankBlock(keyboardKeyToActions[e.key])
 });
 
+onMounted(() => {
+
+    if (route.query.auto_resolve) {
+        if (!route.query.auto_resolve_on_click) {
+            PuzzleResolver.resolve(route.query.auto_resolve_delay as string).catch((e) => console.log(e.message));
+        } else {
+            document.querySelector('.moves-text')?.addEventListener('click', function () {
+                PuzzleResolver.resolve(route.query.auto_resolve_delay as string).catch((e) => console.log(e.message));
+            })
+        }
+    }
+})
+
 </script>
 
 <template>
     <div class="game-container" :data-rows="config.mapSpec.gridRows" :data-cols="config.mapSpec.gridCols"
-        :style="{width: `${config.containerSpec.width}px`, fontSize: `${config.blockSpec.size / 2}px`, marginTop: `${SCREEN_PADDING}px`}">
+        :style="{width: `${containerSpec.width}px`, fontSize: `${blockSpec.size / 2}px`, marginTop: `${SCREEN_PADDING}px`}">
         <template v-for="rows in blockMaps">
             <template v-for="cell in rows">
-                <Block @click="handleClickBlock(cell)" :cell="cell"
-                    :is-correct="cell.value == results[cell.row][cell.col]" :size="config.blockSpec.size"
-                    :gap="config.blockSpec.gap" :border-radius="config.blockSpec.borderRadius"
-                    :background-url="config.image.url" :background-width="config.containerSpec.backgroundWidth"
-                    :background-height="config.containerSpec.backgroundHeight" />
+                <Block @click="handleClickBlock(cell)" :cell="cell" :background-url="config.image.url"
+                    :block-spec="blockSpec" :container-spec="containerSpec" />
             </template>
         </template>
 
-        <div style="position:absolute;text-align:right;font-weight: bold;display:flex;" :style="{
-                right: `${config.blockSpec.gap}px`, top: `${config.blockSpec.gap}px`, fontSize: `${Math.min(24, config.blockSpec.size / 3)}px`
+        <div style="position:absolute;font-weight: bold;display:flex;" :style="{
+                right: `${blockSpec.gap}px`, top: `${blockSpec.gap}px`, fontSize: `${Math.min(18, blockSpec.size / 3)}px`
         }">
-            <div v-if="config.mode == GameMode.IMAGE" style="margin-right: 15px;">
-                <ZoomableImage :full-width="config.containerSpec.width" :full-height="config.containerSpec.height"
-                    :width="config.blockSpec.size" :height="config.blockSpec.size" :image="config.image.url"
+            <div v-if="config.mode == GameMode.IMAGE" style="margin-right: 8px;">
+                <ZoomableImage :full-width="containerSpec.width" :full-height="containerSpec.height"
+                    :width="blockSpec.size * 0.9" :height="blockSpec.size" :image="config.image.url"
                     :placeholder="config.image.url" />
             </div>
 
-            <div>
+            <div @click="togglePlayPauseGame" style="text-align:left;margin-right:8px;">
+                <div>Time</div>
+                <div>{{ timer }}</div>
+            </div>
+
+            <div style="text-align:right">
                 <div class="moves-text">Moves</div>
                 <div>{{ state.moveCount }}</div>
             </div>
