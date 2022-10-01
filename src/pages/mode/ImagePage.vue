@@ -31,6 +31,14 @@ const AVAILABLE_IMAGES: Record<string, MapSpec & { url?: string }> = {
         gridRows: 4,
         gridCols: 4,
     },
+    'phong-canh-4': {
+        gridRows: 5,
+        gridCols: 9,
+    },
+    'phong-canh-5': {
+        gridRows: 6,
+        gridCols: 9,
+    },
 };
 
 const imageConfig = AVAILABLE_IMAGES[imageName];
