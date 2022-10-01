@@ -30,7 +30,7 @@ function toggleZoomIn() {
     <div @click="toggleZoomIn" style="position:relative;display:flex;flex-direction:column;cursor:pointer;"
         :style="style">
         <div
-            :style="`flex-grow:1;background-position:center;background-repeat:no-repeat;background-size:contain;background-image:url(${placeholder})`">
+            :style="`flex-grow:1;background-position:center bottom;background-repeat:no-repeat;background-size:contain;background-image:url(${placeholder})`">
         </div>
         <div style="padding:2% 0;text-align:center;background:#000;user-select:none;"
             :style="{fontSize: `${isZoomIn ? 12 : 10}px`}">
