@@ -21,7 +21,7 @@ const {
     mapSpec: MapSpec,
 }>();
 
-const config: GameConfig = {
+const config = reactive<GameConfig>({
     mode,
     image: image || {
         url: ''
@@ -38,12 +38,17 @@ const config: GameConfig = {
         backgroundWidth: 0,
         backgroundHeight: 0,
     }
-};
+});
 
 onMounted(() => {
     if (route.query.auto_resolve) {
-
-        PuzzleResolver.resolve(route.query.auto_resolve_delay as string);
+        if (!route.query.auto_resolve_on_click) {
+            PuzzleResolver.resolve(route.query.auto_resolve_delay as string);
+        } else {
+            document.querySelector('.moves-text')?.addEventListener('click', function () {
+                PuzzleResolver.resolve(route.query.auto_resolve_delay as string);
+            })
+        }
     }
 })
 
@@ -126,6 +131,10 @@ function moveBlankBlock([rowDelta, colDeta]: number[], increaseMove: number = 1)
         }, 500);
         state.completedAt = Date.now();
         state.status = GameStatus.WIN;
+        if (config.mode == GameMode.IMAGE) {
+            config.blockSpec = buildBlockSpec(config, { gap: 0, borderRadius: 0, size: 0 })
+            config.containerSpec = buildGameContainerSpec(config)
+        }
     }
 }
 
@@ -189,7 +198,7 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
             </div>
 
             <div>
-                <div>Moves</div>
+                <div class="moves-text">Moves</div>
                 <div>{{ state.moveCount }}</div>
             </div>
         </div>

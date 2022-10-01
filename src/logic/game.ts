@@ -1,6 +1,6 @@
 import { ref } from "vue";
 import { shuffle } from "../composables/helpers";
-import { Cell, CellType, GameConfig, GameMode, MapSpec } from "../model/GameConfig";
+import { BlockSpec, Cell, CellType, GameConfig, GameMode, MapSpec } from "../model/GameConfig";
 import { SCREEN_PADDING } from "./constants";
 
 export function buildInitData({ gridCols, gridRows }: MapSpec) {
@@ -59,16 +59,16 @@ export function buildGameContainerSpec({ blockSpec, mapSpec }: GameConfig) {
     };
 }
 
-export function buildBlockSpec({ mode, mapSpec }: GameConfig) {
+export function buildBlockSpec({ mode, mapSpec }: GameConfig, overrideConfig?: BlockSpec) {
     const isImageMode = mode == GameMode.IMAGE;
     const maxGridSize = Math.max(mapSpec.gridCols, mapSpec.gridRows);
 
-    const GAP = isImageMode ? 2 : (maxGridSize >= 12 ? 6 : (maxGridSize >= 8 ? 8 : 12));
-    const BORDER_RADIUS = isImageMode ? 2 : 10;
+    const GAP = overrideConfig ? overrideConfig.gap : (isImageMode ? 2 : (maxGridSize >= 12 ? 6 : (maxGridSize >= 8 ? 8 : 12)));
+    const BORDER_RADIUS = overrideConfig ? overrideConfig.borderRadius : (isImageMode ? 2 : 10);
 
     const maxWidth = (window.innerWidth - SCREEN_PADDING * 2 - (mapSpec.gridCols + 1) * GAP) / mapSpec.gridCols;
     const maxHeight = (window.innerHeight - SCREEN_PADDING * 2 - (mapSpec.gridRows + 2) * GAP) / (mapSpec.gridRows + 1);
-    const BLOCK_SIZE = Math.min(120, maxWidth, maxHeight);
+    const BLOCK_SIZE = Math.min(220, maxWidth, maxHeight);
 
     return { size: BLOCK_SIZE, gap: GAP, borderRadius: BORDER_RADIUS };
 }
