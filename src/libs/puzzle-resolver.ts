@@ -131,8 +131,13 @@ export async function resolve(delay: string | undefined) {
                 if (BOTTOM_SIDES.includes(block_target_p)) {
                     await move(Move.DOWN);
                 } else {
-                    let success = await tryMove(LEFT_SIDES.includes(block_target_p) || block.col == 0 ? Move.RIGTH : Move.LEFT, [Move.RIGTH, Move.LEFT, Move.UP], markIgnoredCurrentBlankBlock);
-                    if (!success) {
+                    let [moveType, fallbacks] = logicalMove(
+                        LEFT_SIDES.includes(block_target_p) || block.col == 0,
+                        [Move.RIGTH, [Move.LEFT, Move.UP]],
+                        [Move.LEFT, [Move.RIGTH, Move.UP]]
+                    );
+
+                    if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                         console.log('Cannot find next step ' + Position.NEXT_TO_TOP);
                         return false;
                     }
@@ -146,8 +151,13 @@ export async function resolve(delay: string | undefined) {
                 if (TOP_SIDES.includes(block_target_p)) {
                     await move(Move.UP);
                 } else {
-                    let success = await tryMove(LEFT_SIDES.includes(block_target_p) || block.col == 0 ? Move.RIGTH : Move.LEFT, [Move.RIGTH, Move.LEFT, Move.DOWN], markIgnoredCurrentBlankBlock);
-                    if (!success) {
+                    let [moveType, fallbacks] = logicalMove(
+                        LEFT_SIDES.includes(block_target_p) || block.col == 0,
+                        [Move.RIGTH, [Move.LEFT, Move.DOWN]],
+                        [Move.LEFT, [Move.RIGTH, Move.DOWN]]
+                    );
+
+                    if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                         console.log('Cannot find next step ' + Position.NEXT_TO_BOTTOM);
                         return false;
                     }
@@ -155,11 +165,17 @@ export async function resolve(delay: string | undefined) {
                 return await moveBlockToPosition(block, targetPosition);
             }
 
-            let success = await tryMove(blank_block_p == Position.TOP ? Move.DOWN : Move.UP, [Move.DOWN, Move.UP, Move.LEFT, Move.RIGTH], markIgnoredCurrentBlankBlock);
-            if (!success) {
+            let [moveType, fallbacks] = logicalMove(
+                blank_block_p == Position.TOP,
+                [Move.DOWN, [Move.LEFT, Move.RIGTH, Move.UP]],
+                [Move.UP, [Move.LEFT, Move.RIGTH, Move.DOWN]]
+            );
+
+            if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                 console.log('Cannot find next step SAME_COLS');
                 return false;
             }
+
             return await moveBlockToPosition(block, targetPosition);
         }
 
@@ -169,8 +185,13 @@ export async function resolve(delay: string | undefined) {
                 if (RIGHT_SIDES.includes(block_target_p)) {
                     await move(Move.RIGTH);
                 } else {
-                    let success = await tryMove(TOP_SIDES.includes(block_target_p) || block.row == 1 ? Move.DOWN : Move.UP, [Move.DOWN, Move.UP, Move.LEFT], markIgnoredCurrentBlankBlock);
-                    if (!success) {
+                    let [moveType, fallbacks] = logicalMove(
+                        TOP_SIDES.includes(block_target_p) || block.row == 1,
+                        [Move.DOWN, [Move.UP, Move.LEFT]],
+                        [Move.UP, [Move.DOWN, Move.LEFT]]
+                    );
+
+                    if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                         console.log('Cannot find next step ' + Position.NEXT_TO_LEFT);
                         return false;
                     }
@@ -183,8 +204,13 @@ export async function resolve(delay: string | undefined) {
                 if (LEFT_SIDES.includes(block_target_p)) {
                     await move(Move.LEFT);
                 } else {
-                    let success = await tryMove(TOP_SIDES.includes(block_target_p) || block.row == 1 ? Move.DOWN : Move.UP, [Move.DOWN, Move.UP, Move.RIGTH], markIgnoredCurrentBlankBlock);
-                    if (!success) {
+                    let [moveType, fallbacks] = logicalMove(
+                        TOP_SIDES.includes(block_target_p) || block.row == 1,
+                        [Move.DOWN, [Move.UP, Move.RIGTH]],
+                        [Move.UP, [Move.DOWN, Move.RIGTH]]
+                    );
+
+                    if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                         console.log('Cannot find next step ' + Position.NEXT_TO_RIGHT);
                         return false;
                     }
@@ -192,52 +218,65 @@ export async function resolve(delay: string | undefined) {
                 return await moveBlockToPosition(block, targetPosition);
             }
 
-            let success = await tryMove(blank_block_p == Position.LEFT ? Move.RIGTH : Move.LEFT, [Move.RIGTH, Move.LEFT, Move.DOWN], markIgnoredCurrentBlankBlock);
-            if (!success) {
+            let [moveType, fallbacks] = logicalMove(
+                blank_block_p == Position.LEFT,
+                [Move.RIGTH, [Move.LEFT, Move.DOWN, Move.UP]],
+                [Move.LEFT, [Move.RIGTH, Move.DOWN, Move.UP]]
+            );
+
+            if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                 console.log('Cannot find next step SAME_ROWS');
                 return false;
             }
             return await moveBlockToPosition(block, targetPosition);
         }
 
-        let success = false;
+        let logicalMoveResult: LogicalMove | null = null;
 
         switch (blank_block_p) {
             case Position.TOP_LEFT:
-                success = await tryMove(TOP_SIDES.includes(block_target_p) || RIGHT_SIDES.includes(block_target_p) ? Move.DOWN : Move.RIGTH, [Move.DOWN, Move.RIGTH, Move.UP, Move.LEFT], markIgnoredCurrentBlankBlock);
-                if (!success) {
-                    console.log(`Cannot find next step where ${Position.TOP_LEFT}`);
-                }
+                logicalMoveResult = logicalMove(
+                    TOP_SIDES.includes(block_target_p) || RIGHT_SIDES.includes(block_target_p),
+                    [Move.DOWN, [Move.RIGTH, Move.UP, Move.LEFT]],
+                    [Move.RIGTH, [Move.DOWN, Move.UP, Move.LEFT]],
+                )
                 break;
             case Position.TOP_RIGHT:
-                success = await tryMove(BOTTOM_SIDES.includes(block_target_p) || RIGHT_SIDES.includes(block_target_p) ? Move.LEFT : Move.DOWN, [Move.LEFT, Move.DOWN, Move.UP, Move.RIGTH], markIgnoredCurrentBlankBlock);
-                if (!success) {
-                    console.log(`Cannot find next step where ${Position.TOP_RIGHT}`);
-                }
+                logicalMoveResult = logicalMove(
+                    BOTTOM_SIDES.includes(block_target_p) || RIGHT_SIDES.includes(block_target_p),
+                    [Move.LEFT, [Move.DOWN, Move.UP, Move.RIGTH]],
+                    [Move.DOWN, [Move.LEFT, Move.UP, Move.RIGTH]],
+                )
                 break;
             case Position.BOTTOM_LEFT:
-                success = await tryMove(TOP_SIDES.includes(block_target_p) || LEFT_SIDES.includes(block_target_p) ? Move.RIGTH : Move.UP, [Move.RIGTH, Move.UP, Move.LEFT, Move.DOWN], markIgnoredCurrentBlankBlock);
-                if (!success) {
-                    console.log(`Cannot find next step where ${Position.BOTTOM_LEFT}`);
-                }
+                logicalMoveResult = logicalMove(
+                    TOP_SIDES.includes(block_target_p) || LEFT_SIDES.includes(block_target_p),
+                    [Move.RIGTH, [Move.UP, Move.LEFT, Move.DOWN]],
+                    [Move.UP, [Move.RIGTH, Move.LEFT, Move.DOWN]],
+                )
                 break;
             case Position.BOTTOM_RIGHT:
-                success = await tryMove(TOP_SIDES.includes(block_target_p) || RIGHT_SIDES.includes(block_target_p) ? Move.LEFT : Move.UP, [Move.LEFT, Move.UP, Move.RIGTH, Move.DOWN], markIgnoredCurrentBlankBlock);
-                if (!success) {
-                    console.log(`Cannot find next step where ${Position.BOTTOM_RIGHT}`);
-                }
+                logicalMoveResult = logicalMove(
+                    TOP_SIDES.includes(block_target_p) || RIGHT_SIDES.includes(block_target_p),
+                    [Move.LEFT, [Move.UP, Move.RIGTH, Move.DOWN]],
+                    [Move.UP, [Move.LEFT, Move.RIGTH, Move.DOWN]],
+                )
                 break;
-            default:
         }
 
-        if (!success) {
+        if (!logicalMoveResult || !await tryMove(logicalMoveResult[0], logicalMoveResult[1], ignorePosition)) {
+            console.log(`Cannot find next step where ${blank_block_p}`);
             return false;
         }
 
         return await moveBlockToPosition(block, targetPosition);
     }
 
-    function markIgnoredCurrentBlankBlock(blankBlockPosition: PairNumber) {
+    function logicalMove(condition: boolean, truePhase: LogicalMove, falsePhase: LogicalMove) {
+        return condition ? truePhase : falsePhase;
+    }
+
+    function ignorePosition(blankBlockPosition: PairNumber) {
         if (processingBlock) {
             ignoredBlock[`${processingBlock.value} - ${processingBlock.row} - ${processingBlock.col}--${blankBlockPosition[0]} - ${blankBlockPosition[1]}`] = true;
         }
@@ -357,6 +396,8 @@ function initBlankMap(gameConfig: GameConfig): BlockWrapper[][] {
 type Pair<Type> = Type[];
 
 type PairNumber = Pair<number>;
+
+interface LogicalMove extends Array<Move | Move[]> { 0: Move; 1: Move[] }
 
 enum Move {
     UP, DOWN, LEFT, RIGTH
