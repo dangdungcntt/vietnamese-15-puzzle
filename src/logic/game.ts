@@ -2,7 +2,7 @@ import { ref } from "vue";
 import { shuffle } from "../composables/helpers";
 import Cell from "../model/Cell";
 import { BlockConfig, BlockSpec, CellType, GameConfig, GameMode, MapSpec } from "../model/GameConfig";
-import { SCREEN_PADDING } from "./constants";
+import { LIMIT_GENERATE_TIMES, SCREEN_PADDING } from "./constants";
 
 export function buildInitData({ gridCols, gridRows }: MapSpec) {
     const requiredData: number[] = [0, 1];
@@ -31,14 +31,19 @@ export function buildResultMap({ gridCols, gridRows }: MapSpec) {
     return results;
 }
 
-export function generateValidBlocksState(results: number[][], requiredData: number[], shuffeData: number[]) {
+export function generateValidBlocksState(results: number[][], requiredData: number[], shuffeData: number[], randFunc: () => number) {
     let blocks = null;
     let blockMaps = null;
+    let times = 0;
 
     do {
-        let state = generateBlocksState(results, requiredData, shuffeData);
+        let state = generateBlocksState(results, requiredData, shuffeData, randFunc);
         blocks = state.blocks;
         blockMaps = state.blockMaps;
+        if (times > LIMIT_GENERATE_TIMES) {
+            break;
+        }
+        times++;
     } while (!isSolvable(blockMaps));
 
     return { blockMaps, blocks };
@@ -77,8 +82,8 @@ export function buildBlockSpec({ blockConfig, mapSpec }: { blockConfig: BlockCon
     return { size: BLOCK_SIZE, gap: blockConfig.gap, borderRadius: blockConfig.borderRadius };
 }
 
-function generateBlocksState(results: number[][], requiredData: number[], shuffeData: number[]) {
-    const blocks = ref<Cell[]>([...requiredData, ...shuffle(shuffeData)].map(value => {
+export function generateBlocksState(results: number[][], requiredData: number[], shuffeData: number[], randFunc: () => number) {
+    const blocks = ref<Cell[]>([...requiredData, ...shuffle(shuffeData, randFunc)].map(value => {
         return new Cell({
             type: CellType.BLOCK,
             value: value,
@@ -126,7 +131,7 @@ function convertValueToCorrectPosition(value: number, { gridCols }: MapSpec) {
     ];
 }
 
-function isSolvable(blockMaps: Cell[][]) {
+export function isSolvable(blockMaps: Cell[][]) {
     let parity = 0;
     const gridRows = blockMaps.length;
     const gridColumns = blockMaps[0].length;

@@ -1,18 +1,17 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import Game from '../components/Game.vue'
-import { GameMode, MapSpec } from '../model/GameConfig';
+import { useMapSize } from '../composables/mapSize';
+import { GameMode } from '../model/GameConfig';
 
 const { mapSize } = defineProps<{ mapSize?: string }>();
 
-const mapSpec: MapSpec = { gridRows: 5, gridCols: 3 };
+const { isValid, mapSpec } = useMapSize(mapSize, { gridRows: 5, gridCols: 3 });
 
-if (mapSize) {
-    const mapSizeParamsMatches = mapSize.match(/^(\d{1,2})[x\/](\d{1,2})$/);
-    if (mapSizeParamsMatches) {
-        mapSpec.gridRows = Math.min(Math.max(+mapSizeParamsMatches[1], 3), 15);
-        mapSpec.gridCols = Math.min(Math.max(+mapSizeParamsMatches[2], 3), 15);
-    }
+if (!isValid) {
+    useRouter().push({ path: '/' });
 }
+
 </script>
 
 <template>

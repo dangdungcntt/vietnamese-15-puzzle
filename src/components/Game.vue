@@ -10,10 +10,11 @@ import ZoomableImage from './ZoomableImage.vue';
 import { useRoute } from 'vue-router';
 import { computed } from '@vue/reactivity';
 import Cell from '../model/Cell';
+import { createRandom } from '../libs/seed-random';
 
 const route = useRoute();
 
-const { mode, mapSpec, image } = defineProps<{ mode: GameMode, image?: ImageModeConfig, mapSpec: MapSpec }>();
+const { mode, mapSpec, image, pin } = defineProps<{ mode: GameMode, image?: ImageModeConfig, mapSpec: MapSpec, pin?: string }>();
 
 const config = reactive<GameConfig>({
     mode,
@@ -32,7 +33,9 @@ const results = buildResultMap(config.mapSpec);
 
 const { requiredData, shuffeData } = buildInitData(config.mapSpec);
 
-const { blocks, blockMaps } = generateValidBlocksState(results, requiredData, shuffeData);
+const randFunc = pin ? createRandom(pin) : () => Math.random()
+
+const { blocks, blockMaps } = generateValidBlocksState(results, requiredData, shuffeData, randFunc);
 
 const blankBlock = ref<Cell>(blocks.value[0]);
 
@@ -180,12 +183,18 @@ function handleClickBlock(cell: Cell) {
         const targetRow = cell.row;
         while (blankBlock.value.row != targetRow) {
             moveBlankBlock([targetRow > blankBlock.value.row ? 1 : -1, 0], 0);
+            if (config.mode == GameMode.CONTEST) {
+                break;
+            }
         }
         state.moveCount++;
     } else if (cell.row == blankBlock.value?.row) {
         const targetCol = cell.col;
         while (blankBlock.value.col != targetCol) {
             moveBlankBlock([0, targetCol > blankBlock.value.col ? 1 : -1], 0);
+            if (config.mode == GameMode.CONTEST) {
+                break;
+            }
         }
         state.moveCount++;
     }

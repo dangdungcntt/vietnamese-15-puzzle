@@ -63,35 +63,35 @@ export async function resolve(delay: string | undefined) {
             block.markFrezee();
         }
 
-        const fisrtBlock = blocks.find(it => it.correctRow == i && it.correctCol == 0)!;
+        const firstBlock = blocks.find(it => it.correctRow == i && it.correctCol == 0)!;
         const secondBlock = blocks.find(it => it.correctRow == i && it.correctCol == 1)!;
 
-        if (fisrtBlock.isCorrect && secondBlock.isCorrect) {
-            continue;
+        function isAligned() {
+            return firstBlock.isCorrect && secondBlock.isCorrect;
         }
 
-        await moveBlockToPosition(fisrtBlock, [secondBlock.correctRow, secondBlock.correctCol]);
-        fisrtBlock.markFrezee();
+        await moveBlockToPosition(firstBlock, [secondBlock.correctRow, secondBlock.correctCol], isAligned);
+        firstBlock.markFrezee();
 
-        let success = await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 1, secondBlock.correctCol]);
+        let success = await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 1, secondBlock.correctCol], isAligned);
         if (!success) {
-            fisrtBlock.unFrezee();
+            firstBlock.unFrezee();
 
             await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 2, secondBlock.correctCol]);
             secondBlock.markFrezee();
 
-            await moveBlockToPosition(fisrtBlock, [secondBlock.correctRow, secondBlock.correctCol]);
-            fisrtBlock.markFrezee();
+            await moveBlockToPosition(firstBlock, [secondBlock.correctRow, secondBlock.correctCol]);
+            firstBlock.markFrezee();
 
             secondBlock.unFrezee();
             await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 1, secondBlock.correctCol]);
         }
 
         secondBlock.markFrezee();
-        fisrtBlock.unFrezee();
+        firstBlock.unFrezee();
 
-        await moveBlockToPosition(fisrtBlock, [fisrtBlock.correctRow, fisrtBlock.correctCol]);
-        fisrtBlock.markFrezee();
+        await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol]);
+        firstBlock.markFrezee();
         secondBlock.unFrezee();
 
         await moveBlockToPosition(secondBlock, [secondBlock.correctRow, secondBlock.correctCol]);
@@ -102,14 +102,14 @@ export async function resolve(delay: string | undefined) {
         const firstBlock = blocks.find(it => it.correctRow == 1 && it.correctCol == j)!;
         const secondBlock = blocks.find(it => it.correctRow == 2 && it.correctCol == j)!;
 
-        if (firstBlock.isCorrect && secondBlock.isCorrect) {
-            continue;
+        function isAligned() {
+            return firstBlock.isCorrect && secondBlock.isCorrect;
         }
 
-        await moveBlockToPosition(secondBlock, [firstBlock.correctRow, firstBlock.correctCol]);
+        await moveBlockToPosition(secondBlock, [firstBlock.correctRow, firstBlock.correctCol], isAligned);
         secondBlock.markFrezee();
 
-        let success = await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol - 1]);
+        let success = await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol - 1], isAligned);
         if (!success) {
             secondBlock.unFrezee();
             await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol - 2]);
@@ -150,9 +150,12 @@ export async function resolve(delay: string | undefined) {
         }
     }
 
-    async function moveBlockToPosition(block: BlockWrapper, targetPosition: PairNumber): Promise<boolean> {
+    async function moveBlockToPosition(block: BlockWrapper, targetPosition: PairNumber, preRun?: () => boolean): Promise<boolean> {
         if (status !== 1) {
             throw new Error('puzzle-resolver: Invalid status');
+        }
+        if (preRun && preRun()) {
+            return true;
         }
         processingBlock = block;
         if (!block.isImage) {
@@ -192,7 +195,7 @@ export async function resolve(delay: string | undefined) {
                         return false;
                     }
                 }
-                return await moveBlockToPosition(block, targetPosition);
+                return await moveBlockToPosition(block, targetPosition, preRun);
             }
 
             if (blank_block_p == Position.NEXT_TO_BOTTOM) {
@@ -212,7 +215,7 @@ export async function resolve(delay: string | undefined) {
                         return false;
                     }
                 }
-                return await moveBlockToPosition(block, targetPosition);
+                return await moveBlockToPosition(block, targetPosition, preRun);
             }
 
             let [moveType, fallbacks] = logicalMove(
@@ -226,7 +229,7 @@ export async function resolve(delay: string | undefined) {
                 return false;
             }
 
-            return await moveBlockToPosition(block, targetPosition);
+            return await moveBlockToPosition(block, targetPosition, preRun);
         }
 
         if (SAME_ROWS.includes(blank_block_p)) {
@@ -246,7 +249,7 @@ export async function resolve(delay: string | undefined) {
                         return false;
                     }
                 }
-                return await moveBlockToPosition(block, targetPosition);
+                return await moveBlockToPosition(block, targetPosition, preRun);
             }
 
             if (blank_block_p == Position.NEXT_TO_RIGHT) {
@@ -265,7 +268,7 @@ export async function resolve(delay: string | undefined) {
                         return false;
                     }
                 }
-                return await moveBlockToPosition(block, targetPosition);
+                return await moveBlockToPosition(block, targetPosition, preRun);
             }
 
             let [moveType, fallbacks] = logicalMove(
@@ -278,7 +281,7 @@ export async function resolve(delay: string | undefined) {
                 console.log('Cannot find next step SAME_ROWS');
                 return false;
             }
-            return await moveBlockToPosition(block, targetPosition);
+            return await moveBlockToPosition(block, targetPosition, preRun);
         }
 
         let logicalMoveResult: LogicalMove | null = null;
@@ -319,7 +322,7 @@ export async function resolve(delay: string | undefined) {
             return false;
         }
 
-        return await moveBlockToPosition(block, targetPosition);
+        return await moveBlockToPosition(block, targetPosition, preRun);
     }
 
     function logicalMove(condition: boolean, truePhase: LogicalMove, falsePhase: LogicalMove) {

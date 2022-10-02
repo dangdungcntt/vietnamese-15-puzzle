@@ -1,5 +1,5 @@
 export enum GameMode {
-    CLASSIC = 'CLASSIC', IMAGE = 'IMAGE'
+    CLASSIC = 'CLASSIC', IMAGE = 'IMAGE', CONTEST = 'CONTEST'
 }
 
 export enum GameStatus {
