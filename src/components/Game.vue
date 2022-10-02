@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue';
 import { formatDuration, millisecondsToStr } from '../composables/helpers';
-import { SCREEN_PADDING } from '../logic/constants';
+import { GAME_VIEWPORT_PADDING, SCREEN_PADDING_TOP } from '../logic/constants';
 import { buildBlockConfig, buildBlockSpec, buildGameContainerSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
 import { BlockSpec, ContainerSpec, GameConfig, GameMode, GameStatus, ImageModeConfig, MapSpec } from '../model/GameConfig';
 import Block from './Block.vue';
@@ -24,7 +24,10 @@ const config = reactive<GameConfig>({
     blockConfig: buildBlockConfig({ mode, mapSpec })
 });
 
-const blockSpec = computed<BlockSpec>(() => buildBlockSpec(config))
+const blockSpec = computed<BlockSpec>(() => buildBlockSpec(config, {
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight - SCREEN_PADDING_TOP
+}))
 
 const containerSpec = computed<ContainerSpec>(() => buildGameContainerSpec({ blockSpec: blockSpec.value, mapSpec: config.mapSpec }))
 
@@ -227,7 +230,7 @@ onMounted(async () => {
 
 <template>
     <div class="game-container" :data-rows="config.mapSpec.gridRows" :data-cols="config.mapSpec.gridCols"
-        :style="{width: `${containerSpec.width}px`, fontSize: `${blockSpec.size / 2}px`, marginTop: `${SCREEN_PADDING}px`}">
+        :style="{width: `${containerSpec.width}px`, fontSize: `${blockSpec.size / 2}px`, marginTop: `${GAME_VIEWPORT_PADDING}px`}">
         <template v-for="rows in blockMaps">
             <template v-for="cell in rows">
                 <Block @click="handleClickBlock(cell)" :cell="cell" :background-url="config.image.url"

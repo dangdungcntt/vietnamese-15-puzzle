@@ -1,2 +1,3 @@
-export const SCREEN_PADDING = 15;
+export const SCREEN_PADDING_TOP = 50;
+export const GAME_VIEWPORT_PADDING = 15;
 export const LIMIT_GENERATE_TIMES = 1000;

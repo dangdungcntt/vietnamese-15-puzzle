@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import { useMapSize } from '../../composables/mapSize';
 import { GameMode } from '../../model/GameConfig';
 import Game from '../../components/Game.vue'
+import GameLayout from '../../layouts/GameLayout.vue';
 
 const { mapSize } = defineProps<{ mapSize?: string }>();
 
@@ -15,5 +16,7 @@ if (!isValid) {
 </script>
 
 <template>
-    <Game :mode="GameMode.CLASSIC" :map-spec="mapSpec" />
+    <GameLayout>
+        <Game :mode="GameMode.CLASSIC" :map-spec="mapSpec" />
+    </GameLayout>
 </template>

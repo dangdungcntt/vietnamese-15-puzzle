@@ -2,6 +2,7 @@
 import { GameMode } from '../../model/GameConfig';
 import Game from '../../components/Game.vue'
 import { MAP_SIZES } from '../../logic/mapSizes';
+import GameLayout from '../../layouts/GameLayout.vue';
 
 const { pin } = defineProps<{ pin: string }>();
 
@@ -21,5 +22,7 @@ if (extractedPinValue && extractedPinValue.length > 6) {
 </script>
 
 <template>
-    <Game :mode="GameMode.CONTEST" :map-spec="mapSpec" :pin="pin" />
+    <GameLayout>
+        <Game :mode="GameMode.CONTEST" :map-spec="mapSpec" :pin="pin" />
+    </GameLayout>
 </template>

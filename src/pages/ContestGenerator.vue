@@ -81,7 +81,7 @@ function nextPin(currentPin: number): number {
 
         <div class="text-center" v-if="generatedPin">
             Game PIN cho bàn chơi {{ `${mapSpec.gridRows}x${mapSpec.gridCols}` }} của bạn là:
-            <h1 style="font-family: 'Pacifico', cursive">{{ generatedPin }}</h1>
+            <h1 class="font-logo">{{ generatedPin }}</h1>
 
             <router-link :to="{name: 'contest-play', params: {pin: generatedPin}}" class="btn btn-primary"
                 style="margin-top:2rem;">

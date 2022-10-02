@@ -22,8 +22,6 @@ function handlePlayClick() {
     
 <template>
     <HomeLayout>
-        <Logo />
-
         <h2 class="text-center">Nhập Game PIN</h2>
 
         <div class="text-center" style="margin-bottom: 1rem;">

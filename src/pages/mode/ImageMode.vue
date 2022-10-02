@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import Game from '../../components/Game.vue'
 import { GameMode } from '../../model/GameConfig';
 import { PICTURES, getImageUrl } from '../../logic/pictures';
+import GameLayout from '../../layouts/GameLayout.vue';
 
 const router = useRouter();
 const { imageName } = defineProps<{ imageName: string }>();
@@ -16,8 +17,8 @@ if (!imageConfig) {
 </script>
     
 <template>
-    <div>
+    <GameLayout>
         <Game v-if="imageConfig && getImageUrl(imageName)" :mode="GameMode.IMAGE"
             :image="{url: getImageUrl(imageName)!}" :map-spec="imageConfig" />
-    </div>
+    </GameLayout>
 </template>
