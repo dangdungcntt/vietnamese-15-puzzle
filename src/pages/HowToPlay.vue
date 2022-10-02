@@ -47,7 +47,7 @@ import how2Image from '../assets/how2.png';
         </div>
 
         <h4>3. Chế độ thi đấu</h4>
-        <p>Sau khi chọn chế độ thi đấu bạn sẽ được chuyển hướng đến 1 bàn chơi đi kèm 1 mã PIN. Chia sẻ link đến bàn
+        <p>Sau khi chọn chế độ thi đấu bạn sẽ có 1 mã PIN. Chia sẻ mã PIN hoặc link đến bàn
             chơi cho bạn bè để cùng so tài.</p>
         <p>Các bàn chơi nhập cùng 1 mã PIN sẽ bắt đầu với thứ tự các ô số được xáo trộn giống nhau.</p>
         <p class="italic">Lưu ý: Để đảm bảo công bằng, chế độ thi đấu chỉ cho phép việc click để di chuyển với ô

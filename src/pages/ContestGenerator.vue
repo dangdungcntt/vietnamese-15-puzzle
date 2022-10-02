@@ -80,16 +80,16 @@ function nextPin(currentPin: number): number {
         <Logo />
 
         <div class="text-center" v-if="generatedPin">
-            Game PIN của bạn là:
-            <h1 style="font-family: 'Pacifico', cursive">#{{ generatedPin }}</h1>
+            Game PIN cho bàn chơi {{ `${mapSpec.gridRows}x${mapSpec.gridCols}` }} của bạn là:
+            <h1 style="font-family: 'Pacifico', cursive">{{ generatedPin }}</h1>
 
-            <router-link :to="{name: 'contest-play', params: {pin: generatedPin}}" class="btn"
-                style="margin-top:2rem;background:rgb(106, 198, 184)">
+            <router-link :to="{name: 'contest-play', params: {pin: generatedPin}}" class="btn btn-primary"
+                style="margin-top:2rem;">
                 Chơi ngay</router-link>
         </div>
         <div v-else>{{ message }}</div>
 
-        <router-link :to="{name: 'map-sizes', query: {mode: 'contest'}}" class="btn" style="margin-top:1rem;">Quay lại
+        <router-link :to="{name: 'contest-map-sizes'}" class="btn" style="margin-top:1rem;">Quay lại
         </router-link>
     </div>
 </template>

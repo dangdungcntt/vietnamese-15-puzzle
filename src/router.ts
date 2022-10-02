@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, RouteLocation } from 'vue-router';
 import Home from './pages/Home.vue'
-import MapSizesPage from './pages/MapSizesPage.vue'
+import ClassicMapSizesPage from './pages/ClassicMapSizesPage.vue'
+import ContestMapSizesPage from './pages/ContestMapSizesPage.vue'
 import ListPictures from './pages/ListPictures.vue'
 import HowToPlay from './pages/HowToPlay.vue'
 import ClassicMode from './pages/mode/ClassicMode.vue'
@@ -11,7 +12,8 @@ import ContestMode from './pages/mode/ContestMode.vue'
 const routes = [
     { path: '/', component: Home },
     { path: '/how-to-play', component: HowToPlay, name: 'how-to-play' },
-    { path: '/maps', component: MapSizesPage, name: 'map-sizes' },
+    { path: '/classic-maps', component: ClassicMapSizesPage, name: 'map-sizes' },
+    { path: '/contest-maps', component: ContestMapSizesPage, name: 'contest-map-sizes' },
     { path: '/pictures', component: ListPictures, name: 'pictures' },
     { path: '/contest', component: ContestGenerator, name: 'contest-generator' },
     { path: '/contest/play/:pin', component: ContestMode, props: true, name: 'contest-play' },

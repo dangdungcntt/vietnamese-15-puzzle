@@ -236,12 +236,18 @@ onMounted(async () => {
         </template>
 
         <div style="position:absolute;font-weight: bold;display:flex;" :style="{
-                right: `${blockSpec.gap}px`, top: `${blockSpec.gap}px`, fontSize: `${Math.min(18, blockSpec.size / 3)}px`
+                right: `${blockSpec.gap}px`, top: `${blockSpec.gap}px`, fontSize: `1rem`
         }">
             <div v-if="config.mode == GameMode.IMAGE" style="margin-right: 8px;">
                 <ZoomableImage :full-width="containerSpec.width" :full-height="containerSpec.height"
                     :width="blockSpec.size * 0.9" :height="blockSpec.size" :image="config.image.url"
                     :placeholder="config.image.url" />
+            </div>
+
+            <div v-if="config.mode == GameMode.CONTEST"
+                style="padding-right: 8px;margin-right: 8px;border-right:1px solid #fff;">
+                <div>Game PIN</div>
+                <div>{{ pin }}</div>
             </div>
 
             <div @click="togglePlayPauseGame" style="text-align:left;margin-right:8px;">
