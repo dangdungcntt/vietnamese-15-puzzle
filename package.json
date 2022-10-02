@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vue-tsc --noEmit && vite build",
+        "build-gh": "vue-tsc --noEmit && vite build --base /15-puzzle/",
         "preview": "vite preview"
     },
     "dependencies": {

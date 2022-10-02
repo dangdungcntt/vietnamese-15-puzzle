@@ -9,9 +9,10 @@ export default class Cell {
     correctRow: number;
     correctCol: number;
 
-    constructor({ type, value, row, col }: Cell) {
+    constructor({ type, value, text, row, col }: Cell) {
         this.type = type;
         this.value = value;
+        this.text = text;
         this.row = row;
         this.col = col;
 
