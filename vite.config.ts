@@ -12,7 +12,8 @@ export default defineConfig({
                 name: 'Puzzle Game',
                 short_name: 'Puzzle Game',
                 description: 'Puzzle Game by Nddcoder',
-                theme_color: '#ffffff',
+                background_color: '#57407c',
+                theme_color: '#57407c',
                 icons: [
                     {
                         src: '/icon-192.png',
