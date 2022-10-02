@@ -122,7 +122,7 @@ watch(() => state.status, (newStatus: GameStatus, oldStatus: GameStatus) => {
         }
 
         state.currentTime = Date.now();
-        state.currentTimeItv = setInterval(() => {
+        state.currentTimeItv = window.setInterval(() => {
             state.currentTime = Date.now();
         }, 1000);
     }
