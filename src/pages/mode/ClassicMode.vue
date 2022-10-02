@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
 import { useMapSize } from '../../composables/mapSize';
 import { GameMode } from '../../model/GameConfig';
 import Game from '../../components/Game.vue'
-import { useRouter } from 'vue-router';
 
-const { mapSize } = defineProps<{ mapSize?: string, pin: string }>();
+const { mapSize } = defineProps<{ mapSize?: string }>();
 
 const { isValid, mapSpec } = useMapSize(mapSize, { gridRows: 5, gridCols: 3 });
 
@@ -15,5 +15,5 @@ if (!isValid) {
 </script>
 
 <template>
-    <Game :mode="GameMode.CONTEST" :map-spec="mapSpec" :pin="pin" />
+    <Game :mode="GameMode.CLASSIC" :map-spec="mapSpec" />
 </template>

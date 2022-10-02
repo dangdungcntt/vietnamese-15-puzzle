@@ -1,19 +1,26 @@
 import { createRouter, createWebHistory, RouteLocation } from 'vue-router';
 import Home from './pages/Home.vue'
 
-const ImagePage = () => import('./pages/mode/ImagePage.vue');
-const ContestPlay = () => import('./pages/mode/ContestPlay.vue');
+const MapSizesPage = () => import('./pages/MapSizesPage.vue');
+const ListPictures = () => import('./pages/ListPictures.vue');
+const HowToPlay = () => import('./pages/HowToPlay.vue');
+const ClassicMode = () => import('./pages/mode/ClassicMode.vue');
+const ImageMode = () => import('./pages/mode/ImageMode.vue');
+const ContestMode = () => import('./pages/mode/ContestMode.vue');
 const ContestGenerator = () => import('./pages/ContestGenerator.vue');
 
 const routes = [
     { path: '/', component: Home },
-    { path: '/contest', component: ContestGenerator },
-    { path: '/contest/play/:pin', component: ContestPlay, props: true, name: 'contest-play' },
-    { path: '/contest/:mapSize', component: ContestGenerator, props: true },
-    { path: '/contest/:mapSize/play/:pin', component: ContestPlay, props: true, name: 'contest-play-custom' },
-    { path: '/i/:imageName', component: ImagePage, props: true },
+    { path: '/how-to-play', component: HowToPlay, name: 'how-to-play' },
+    { path: '/maps', component: MapSizesPage, name: 'map-sizes' },
+    { path: '/pictures', component: ListPictures, name: 'pictures' },
+    { path: '/contest', component: ContestGenerator, name: 'contest-generator' },
+    { path: '/contest/play/:pin', component: ContestMode, props: true, name: 'contest-play' },
+    { path: '/contest/:mapSize', component: ContestGenerator, props: true, name: 'contest-generator-custom' },
+    { path: '/i/:imageName', component: ImageMode, props: true, name: 'image-mode' },
     { path: '/mode/image/:imageName', redirect: (to: RouteLocation) => ({ path: `/i/${to.params.imageName}` }) },
-    { path: '/c/:mapSize', component: Home, props: true },
+    { path: '/classic', component: ClassicMode, name: 'classic-mode' },
+    { path: '/c/:mapSize', component: ClassicMode, props: true, name: 'classic-mode-custom' },
     { path: '/:mapSize', redirect: (to: RouteLocation) => ({ path: `/c/${to.params.mapSize}` }) },
 ]
 

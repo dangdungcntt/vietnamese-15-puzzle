@@ -6,6 +6,9 @@ import { createRandom } from '../libs/seed-random';
 import { LIMIT_GENERATE_TIMES } from '../logic/constants';
 import { buildResultMap, buildInitData, generateBlocksState, isSolvable } from '../logic/game';
 import Cell from '../model/Cell';
+import Logo from '../components/Logo.vue';
+
+import { MAP_SIZES } from '../logic/mapSizes';
 
 const router = useRouter();
 
@@ -17,6 +20,8 @@ const resultsMap = buildResultMap(mapSpec);
 const { requiredData, shuffeData } = buildInitData(mapSpec);
 
 const message = ref('Loading..');
+
+const generatedPin = ref('');
 
 onMounted(async () => {
     if (!isValid) {
@@ -32,12 +37,14 @@ onMounted(async () => {
         let state = generateBlocksState(resultsMap, requiredData, shuffeData, createRandom(pin.toString()));
 
         if (await asyncCheck(state.blockMaps)) {
-            message.value = 'Redirecting..';
-            if (mapSize) {
-                router.push({ name: 'contest-play-custom', params: { pin, mapSize } });
-            } else {
-                router.push({ name: 'contest-play', params: { pin } });
+            for (let i = 0; i < MAP_SIZES.length; i++) {
+                if (MAP_SIZES[i].gridRows === mapSpec.gridRows && MAP_SIZES[i].gridCols === mapSpec.gridCols) {
+                    generatedPin.value = `${i.toString().padStart(2, '0')}${pin}`;
+                    return
+                }
             }
+
+            generatedPin.value = pin.toString()
             return;
         }
         pin = nextPin(pin);
@@ -69,5 +76,19 @@ function nextPin(currentPin: number): number {
 </script>
 
 <template>
-    <div>{{ message }}</div>
+    <div class="home-container">
+        <Logo />
+
+        <div class="text-center" v-if="generatedPin">
+            Game PIN của bạn là:
+            <h1 style="font-family: 'Pacifico', cursive">#{{ generatedPin }}</h1>
+
+            <router-link :to="{name: 'contest-play', params: {pin: generatedPin}}" class="btn"
+                style="margin-top:2rem;background:rgb(106, 198, 184)">
+                Chơi ngay</router-link>
+        </div>
+        <div v-else>{{ message }}</div>
+
+        <router-link to="/" class="btn" style="margin-top:1rem;">Quay lại</router-link>
+    </div>
 </template>

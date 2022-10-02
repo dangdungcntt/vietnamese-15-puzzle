@@ -32,7 +32,7 @@ const results = buildResultMap(config.mapSpec);
 
 const { requiredData, shuffeData } = buildInitData(config.mapSpec);
 
-const randFunc = pin ? createRandom(pin) : () => Math.random()
+const randFunc = pin ? createRandom(pin) : () => Math.random();
 
 const { blocks, blockMaps } = generateValidBlocksState(results, requiredData, shuffeData, randFunc);
 
