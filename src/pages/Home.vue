@@ -30,7 +30,6 @@ function changeActiveMenu(newValue: ActiveMenu) {
             <ListMapSize :map-sizes="MAP_SIZES" to-route-name="contest-generator-custom" />
         </div>
 
-        <a v-if="activeMenu != ActiveMenu.HOME" @click="changeActiveMenu(ActiveMenu.HOME)" class="btn"
-            style="margin-top:1rem;">Quay lại</a>
+        <a v-if="activeMenu != ActiveMenu.HOME" @click="changeActiveMenu(ActiveMenu.HOME)" class="btn">Quay lại</a>
     </HomeLayout>
 </template>
