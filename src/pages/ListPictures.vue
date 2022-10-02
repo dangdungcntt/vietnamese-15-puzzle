@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import HomeLayout from '../layouts/HomeLayout.vue';
 
-import { PICTURES } from '../logic/pictures';
+import { PICTURES, getImageUrl } from '../logic/pictures';
+
+//Preload all images
+for (let imageName in PICTURES) {
+    new Image().src = getImageUrl(imageName)!
+}
 
 </script>
     

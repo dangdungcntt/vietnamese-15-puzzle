@@ -1,4 +1,6 @@
-export const PICTURES = {
+import { MapSpec } from "../model/GameConfig";
+
+export const PICTURES: Record<string, MapSpec & { name: string, url?: string }> = {
     'minion-1': {
         name: 'Minion Otto',
         gridRows: 3,
@@ -41,4 +43,12 @@ export const PICTURES = {
         gridRows: 6,
         gridCols: 9,
     },
+}
+
+export function getImageUrl(imageName: string) {
+    if (!PICTURES[imageName]) {
+        return null;
+    }
+
+    return PICTURES[imageName].url || `/images/${imageName}.jpg`;
 }
