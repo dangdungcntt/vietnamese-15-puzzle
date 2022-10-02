@@ -89,6 +89,7 @@ function nextPin(currentPin: number): number {
         </div>
         <div v-else>{{ message }}</div>
 
-        <router-link to="/" class="btn" style="margin-top:1rem;">Quay lại</router-link>
+        <router-link :to="{name: 'map-sizes', query: {mode: 'contest'}}" class="btn" style="margin-top:1rem;">Quay lại
+        </router-link>
     </div>
 </template>
