@@ -23,11 +23,18 @@ const routes = [
     { path: '/classic', component: ClassicMode, name: 'classic-mode' },
     { path: '/c/:mapSize', component: ClassicMode, props: true, name: 'classic-mode-custom' },
     { path: '/:mapSize', redirect: (to: RouteLocation) => ({ path: `/c/${to.params.mapSize}` }) },
-]
+];
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes
-})
+});
+
+router.beforeEach((to, from, next) => {
+    document.body.setAttribute("tabindex", "-1");
+    document.body.focus();
+    document.body.removeAttribute("tabindex");
+    next();
+});
 
 export default router;
