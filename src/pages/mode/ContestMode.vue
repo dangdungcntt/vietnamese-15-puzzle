@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useMapSize } from '../../composables/mapSize';
 import { GameMode } from '../../model/GameConfig';
 import Game from '../../components/Game.vue'
 import { MAP_SIZES } from '../../logic/mapSizes';

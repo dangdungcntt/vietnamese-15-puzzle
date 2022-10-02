@@ -15,7 +15,8 @@ import how2Image from '../assets/how2.png';
             từ trên xuống dưới.
         </p>
         <div style="text-align:center;margin: 0.8rem 0 0.8rem;">
-            <div><img :src="how1Image" style="max-height: 300px" alt="Trạng thái kết thúc của màn chơi 3x3">
+            <div><img :src="how1Image" loading="lazy" style="max-height: 300px"
+                    alt="Trạng thái kết thúc của màn chơi 3x3">
             </div>
             <small class="italic">Hình 1. Trạng thái kết thúc của màn chơi 3x3</small>
         </div>
@@ -39,7 +40,8 @@ import how2Image from '../assets/how2.png';
         <h4>2. Chế độ ghép hình</h4>
         <p>Các con số ở chế độ cổ điển sẽ được thay bằng các miếng ghép của 1 hình ảnh lớn.</p>
         <div style="text-align:center;margin: 0.8rem 0 0.8rem;">
-            <div><img :src="how2Image" style="max-height: 300px" alt="Trạng thái kết thúc của màn chơi 3x3">
+            <div><img :src="how2Image" loading="lazy" style="max-height: 300px"
+                    alt="Trạng thái kết thúc của màn chơi 3x3">
             </div>
             <small class="italic">Hình 2. Màn hình chế độ chơi ghép hình</small>
         </div>

@@ -1,13 +1,12 @@
 import { createRouter, createWebHistory, RouteLocation } from 'vue-router';
 import Home from './pages/Home.vue'
-
-const MapSizesPage = () => import('./pages/MapSizesPage.vue');
-const ListPictures = () => import('./pages/ListPictures.vue');
-const HowToPlay = () => import('./pages/HowToPlay.vue');
-const ClassicMode = () => import('./pages/mode/ClassicMode.vue');
-const ImageMode = () => import('./pages/mode/ImageMode.vue');
-const ContestMode = () => import('./pages/mode/ContestMode.vue');
-const ContestGenerator = () => import('./pages/ContestGenerator.vue');
+import MapSizesPage from './pages/MapSizesPage.vue'
+import ListPictures from './pages/ListPictures.vue'
+import HowToPlay from './pages/HowToPlay.vue'
+import ClassicMode from './pages/mode/ClassicMode.vue'
+import ContestGenerator from './pages/ContestGenerator.vue'
+import ImageMode from './pages/mode/ImageMode.vue'
+import ContestMode from './pages/mode/ContestMode.vue'
 
 const routes = [
     { path: '/', component: Home },
