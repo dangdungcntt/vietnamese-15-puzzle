@@ -5,7 +5,7 @@ export function useMapSize(mapSize: string | undefined, defaultValue: MapSpec, m
 
     if (!mapSizeParamsMatches) {
         return {
-            isValid: false,
+            isValid: !mapSize,
             mapSpec: defaultValue
         };
     }

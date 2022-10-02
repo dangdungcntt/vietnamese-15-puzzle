@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { onBeforeMount, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useMapSize } from '../../composables/mapSize';
-import { createRandom } from '../../libs/seed-random';
-import { LIMIT_GENERATE_TIMES } from '../../logic/constants';
-import { buildResultMap, generateBlocksState, buildInitData, isSolvable } from '../../logic/game';
-import Cell from '../../model/Cell';
+import { useMapSize } from '../composables/mapSize';
+import { createRandom } from '../libs/seed-random';
+import { LIMIT_GENERATE_TIMES } from '../logic/constants';
+import { buildResultMap, buildInitData, generateBlocksState, isSolvable } from '../logic/game';
+import Cell from '../model/Cell';
 
 const router = useRouter();
 
@@ -19,7 +19,7 @@ const { requiredData, shuffeData } = buildInitData(mapSpec);
 const message = ref('Loading..');
 
 onMounted(async () => {
-    if (mapSize && !isValid) {
+    if (!isValid) {
         router.push({ path: '/' });
         console.log('Invalid mapSize');
         return;

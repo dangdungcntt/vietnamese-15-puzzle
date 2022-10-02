@@ -8,7 +8,7 @@ const { mapSize } = defineProps<{ mapSize?: string, pin: string }>();
 
 const { isValid, mapSpec } = useMapSize(mapSize, { gridRows: 5, gridCols: 3 });
 
-if (mapSize && !isValid) {
+if (!isValid) {
     useRouter().push({ path: '/' });
 }
 

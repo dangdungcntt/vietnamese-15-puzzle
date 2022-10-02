@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory, RouteLocation } from 'vue-router';
 import Home from './pages/Home.vue'
-import ImagePage from './pages/mode/ImagePage.vue'
-import ContestGenerator from './pages/mode/ContestGenerator.vue'
-import ContestPlay from './pages/mode/ContestPlay.vue'
+
+const ImagePage = () => import('./pages/mode/ImagePage.vue');
+const ContestPlay = () => import('./pages/mode/ContestPlay.vue');
+const ContestGenerator = () => import('./pages/ContestGenerator.vue');
 
 const routes = [
     { path: '/', component: Home },

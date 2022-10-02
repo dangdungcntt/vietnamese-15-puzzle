@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue';
-import * as PuzzleResolver from '../libs/puzzle-solver';
 import { formatDuration, millisecondsToStr } from '../composables/helpers';
 import { SCREEN_PADDING } from '../logic/constants';
 import { buildBlockConfig, buildBlockSpec, buildGameContainerSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';
@@ -211,9 +210,9 @@ window.document.addEventListener('keydown', function handleKeypress(e: KeyboardE
     moveBlankBlock(keyboardKeyToActions[e.key])
 });
 
-onMounted(() => {
-
+onMounted(async () => {
     if (route.query.auto_resolve) {
+        const PuzzleResolver = await import('../libs/puzzle-solver');
         if (!route.query.auto_resolve_on_click) {
             PuzzleResolver.resolve(route.query.auto_resolve_delay as string).catch((e) => console.log(e.message));
         } else {
@@ -222,7 +221,7 @@ onMounted(() => {
             })
         }
     }
-})
+});
 
 </script>
 
