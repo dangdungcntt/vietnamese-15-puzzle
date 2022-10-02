@@ -19,9 +19,10 @@ const isUseImage = !!backgroundUrl
 <template>
     <div class="block" :class="{
         'wall': cell.isWall,
+        'block-blank': cell.isBlockBlank,
         'block-item': isBlockItem,
+        'block-mode-image': isUseImage,
         'correct-position': isBlockItem && cell.isCorrect,
-        'block-blank': cell.isBlockBlank
     }" :style="{
         position: 'absolute', 
         left: `${cell.col * blockSpec.size + (cell.col + 1) * blockSpec.gap}px`,

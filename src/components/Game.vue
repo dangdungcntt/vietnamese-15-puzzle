@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue';
-import * as PuzzleResolver from '../libs/puzzle-resolver';
+import * as PuzzleResolver from '../libs/puzzle-solver';
 import { formatDuration, millisecondsToStr } from '../composables/helpers';
 import { SCREEN_PADDING } from '../logic/constants';
 import { buildBlockConfig, buildBlockSpec, buildGameContainerSpec, buildInitData, buildResultMap, generateValidBlocksState } from '../logic/game';

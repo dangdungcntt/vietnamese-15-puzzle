@@ -1,4 +1,12 @@
 let status = 0;
+
+if (!document.getElementById('puzzle-resolver-style') && location.href.includes('auto_resolve_hightlight=1')) {
+    const style = document.createElement('style');
+    style.id = 'puzzle-resolver-style';
+    style.innerText = `.puzzle-resolver-target {background-color:#5daef4!important}`;
+    document.head.appendChild(style);
+}
+
 export async function resolve(delay: string | undefined) {
     if (status == 1) {
         //Stop
@@ -134,12 +142,24 @@ export async function resolve(delay: string | undefined) {
 
     status = 0;
     console.log(`Resolved in ${(Date.now() - start) / 1000}s`);
+    clearHighlightEl();
+
+    function clearHighlightEl() {
+        if (document.querySelector('.puzzle-resolver-target')) {
+            document.querySelector('.puzzle-resolver-target')?.classList.remove('puzzle-resolver-target')
+        }
+    }
 
     async function moveBlockToPosition(block: BlockWrapper, targetPosition: PairNumber): Promise<boolean> {
         if (status !== 1) {
             throw new Error('puzzle-resolver: Invalid status');
         }
         processingBlock = block;
+        if (!block.isImage) {
+            clearHighlightEl();
+            block.getEl().classList.add('puzzle-resolver-target');
+        }
+
         const block_target_p = calculateRelativePosition([block.row, block.col], targetPosition);
 
         if (block_target_p == Position.CENTER) {
@@ -465,6 +485,10 @@ class BlockWrapper {
         this.isFrezee = false;
     }
 
+    public getEl() {
+        return this.el;
+    }
+
     public click() {
         this.el.click();
     }
@@ -512,6 +536,10 @@ class BlockWrapper {
 
     public get isCorrect(): boolean {
         return this.row === this.cRow && this.col === this.cCol;
+    }
+
+    public get isImage(): boolean {
+        return this.el.classList.contains('block-mode-image')
     }
 }
 
