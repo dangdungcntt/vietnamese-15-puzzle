@@ -1,6 +1,6 @@
 let status = 0;
 
-if (!document.getElementById('puzzle-resolver-style') && location.href.includes('auto_resolve_hightlight=1')) {
+if (!document.getElementById('puzzle-resolver-style') && location.href.includes('auto_resolve_highlight=1')) {
     const style = document.createElement('style');
     style.id = 'puzzle-resolver-style';
     style.innerText = `.puzzle-resolver-target {background-color:#5daef4!important}`;
