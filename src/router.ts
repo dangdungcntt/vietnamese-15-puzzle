@@ -1,3 +1,4 @@
+import { nextTick } from 'vue';
 import { createRouter, createWebHistory, RouteLocation } from 'vue-router';
 import Home from './pages/Home.vue'
 import ClassicMapSizesPage from './pages/ClassicMapSizesPage.vue'
@@ -30,11 +31,12 @@ const router = createRouter({
     routes
 });
 
-router.beforeEach((to, from, next) => {
-    document.body.setAttribute("tabindex", "-1");
-    document.body.focus();
-    document.body.removeAttribute("tabindex");
-    next();
+router.afterEach((to, from) => {
+    nextTick(() => {
+        document.body.tabIndex = 0;
+        document.body.focus();
+        document.body.tabIndex = -1;
+    });
 });
 
 export default router;

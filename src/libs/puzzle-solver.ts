@@ -1,4 +1,8 @@
-let status = 0;
+enum SolveStatus {
+    IDLE = 'IDLE', RUNNING = 'RUNNING'
+}
+
+let status: SolveStatus = SolveStatus.IDLE;
 
 if (!document.getElementById('puzzle-resolver-style') && location.href.includes('auto_resolve_highlight=1')) {
     const style = document.createElement('style');
@@ -8,13 +12,13 @@ if (!document.getElementById('puzzle-resolver-style') && location.href.includes(
 }
 
 export async function resolve(delay: string | undefined) {
-    if (status == 1) {
+    if (status == SolveStatus.RUNNING) {
         //Stop
         console.log('Stopped. An error will throw soon.')
-        status = 0;
+        status = SolveStatus.IDLE;
         return;
     }
-    status = 1;
+    status = SolveStatus.RUNNING;
     const DELAY = isNaN(Number(delay)) ? 500 : Number(delay);
     const SAME_COLS = [Position.TOP, Position.NEXT_TO_TOP, Position.CENTER, Position.NEXT_TO_BOTTOM, Position.BOTTOM];
     const SAME_ROWS = [Position.LEFT, Position.NEXT_TO_LEFT, Position.CENTER, Position.NEXT_TO_RIGHT, Position.RIGHT];
@@ -42,7 +46,7 @@ export async function resolve(delay: string | undefined) {
 
     if (blocks.filter(it => !it.isCorrect).length == 0) {
         console.log('All block is correct. Stop.');
-        status = 0;
+        status = SolveStatus.IDLE;
         return;
     }
 
@@ -140,35 +144,43 @@ export async function resolve(delay: string | undefined) {
     await moveBlockToPosition(_1bl, [_1bl.correctRow, _1bl.correctCol]);
     _1bl.markFrezee();
 
-    status = 0;
+    status = SolveStatus.IDLE;
     console.log(`Resolved in ${(Date.now() - start) / 1000}s`);
     clearHighlightEl();
 
-    function clearHighlightEl() {
-        if (document.querySelector('.puzzle-resolver-target')) {
-            document.querySelector('.puzzle-resolver-target')?.classList.remove('puzzle-resolver-target')
-        }
+    async function moveBlockToPosition(block: BlockWrapper, targetPosition: PairNumber, preRun?: () => boolean): Promise<boolean> {
+        let status = MoveBlockResult.STEPPED;
+
+        do {
+            if (preRun && preRun()) {
+                status = MoveBlockResult.COMPLETED;
+                break;
+            }
+
+            processingBlock = block;
+
+            status = await doMoveBlock(block, targetPosition);
+        } while (status == MoveBlockResult.STEPPED);
+
+        ignoredBlock = {};
+
+        return status == MoveBlockResult.COMPLETED;
     }
 
-    async function moveBlockToPosition(block: BlockWrapper, targetPosition: PairNumber, preRun?: () => boolean): Promise<boolean> {
-        if (status !== 1) {
+    async function doMoveBlock(block: BlockWrapper, targetPosition: PairNumber): Promise<MoveBlockResult> {
+        if (status !== SolveStatus.RUNNING) {
             throw new Error('puzzle-resolver: Invalid status');
         }
-        if (preRun && preRun()) {
-            return true;
-        }
-        processingBlock = block;
-        if (!block.isImage) {
-            clearHighlightEl();
-            block.getEl().classList.add('puzzle-resolver-target');
-        }
+
+        // if (!block.isImage) {
+        //     clearHighlightEl();
+        //     block.getEl().classList.add('puzzle-resolver-target');
+        // }
 
         const block_target_p = calculateRelativePosition([block.row, block.col], targetPosition);
 
         if (block_target_p == Position.CENTER) {
-            console.log(`Moved ${block.value} to ${targetPosition}`);
-            ignoredBlock = {};
-            return true;
+            return MoveBlockResult.COMPLETED;
         }
 
         if (blankBlock.row == 0) {
@@ -192,10 +204,10 @@ export async function resolve(delay: string | undefined) {
 
                     if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                         console.log('Cannot find next step ' + Position.NEXT_TO_TOP);
-                        return false;
+                        return MoveBlockResult.FAILED;
                     }
                 }
-                return await moveBlockToPosition(block, targetPosition, preRun);
+                return MoveBlockResult.STEPPED;
             }
 
             if (blank_block_p == Position.NEXT_TO_BOTTOM) {
@@ -212,10 +224,10 @@ export async function resolve(delay: string | undefined) {
 
                     if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                         console.log('Cannot find next step ' + Position.NEXT_TO_BOTTOM);
-                        return false;
+                        return MoveBlockResult.FAILED;
                     }
                 }
-                return await moveBlockToPosition(block, targetPosition, preRun);
+                return MoveBlockResult.STEPPED;
             }
 
             let [moveType, fallbacks] = logicalMove(
@@ -226,10 +238,10 @@ export async function resolve(delay: string | undefined) {
 
             if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                 console.log('Cannot find next step SAME_COLS');
-                return false;
+                return MoveBlockResult.FAILED;
             }
 
-            return await moveBlockToPosition(block, targetPosition, preRun);
+            return MoveBlockResult.STEPPED;
         }
 
         if (SAME_ROWS.includes(blank_block_p)) {
@@ -246,10 +258,10 @@ export async function resolve(delay: string | undefined) {
 
                     if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                         console.log('Cannot find next step ' + Position.NEXT_TO_LEFT);
-                        return false;
+                        return MoveBlockResult.FAILED;
                     }
                 }
-                return await moveBlockToPosition(block, targetPosition, preRun);
+                return MoveBlockResult.STEPPED;
             }
 
             if (blank_block_p == Position.NEXT_TO_RIGHT) {
@@ -265,10 +277,10 @@ export async function resolve(delay: string | undefined) {
 
                     if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                         console.log('Cannot find next step ' + Position.NEXT_TO_RIGHT);
-                        return false;
+                        return MoveBlockResult.FAILED;
                     }
                 }
-                return await moveBlockToPosition(block, targetPosition, preRun);
+                return MoveBlockResult.STEPPED;
             }
 
             let [moveType, fallbacks] = logicalMove(
@@ -279,9 +291,9 @@ export async function resolve(delay: string | undefined) {
 
             if (!await tryMove(moveType, fallbacks, ignorePosition)) {
                 console.log('Cannot find next step SAME_ROWS');
-                return false;
+                return MoveBlockResult.FAILED;
             }
-            return await moveBlockToPosition(block, targetPosition, preRun);
+            return MoveBlockResult.STEPPED;
         }
 
         let logicalMoveResult: LogicalMove | null = null;
@@ -319,14 +331,10 @@ export async function resolve(delay: string | undefined) {
 
         if (!logicalMoveResult || !await tryMove(logicalMoveResult[0], logicalMoveResult[1], ignorePosition)) {
             console.log(`Cannot find next step where ${blank_block_p}`);
-            return false;
+            return MoveBlockResult.FAILED;
         }
 
-        return await moveBlockToPosition(block, targetPosition, preRun);
-    }
-
-    function logicalMove(condition: boolean, truePhase: LogicalMove, falsePhase: LogicalMove) {
-        return condition ? truePhase : falsePhase;
+        return MoveBlockResult.STEPPED;
     }
 
     function ignorePosition(blankBlockPosition: PairNumber) {
@@ -384,6 +392,12 @@ export async function resolve(delay: string | undefined) {
     }
 }
 
+function clearHighlightEl() {
+    if (document.querySelector('.puzzle-resolver-target')) {
+        document.querySelector('.puzzle-resolver-target')?.classList.remove('puzzle-resolver-target')
+    }
+}
+
 function calculateRelativePosition([row, col]: PairNumber, [targetRow, targetCol]: PairNumber): Position {
     if (row == targetRow) {
         if (col == targetCol) {
@@ -410,14 +424,10 @@ function calculateRelativePosition([row, col]: PairNumber, [targetRow, targetCol
     }
 
     return col < targetCol ? Position.BOTTOM_LEFT : Position.BOTTOM_RIGHT;
-
-
 }
 
-function swap(map: BlockWrapper[][], [row1, col1]: PairNumber, [row2, col2]: PairNumber) {
-    const tmp = map[row2][col2];
-    map[row2][col2] = map[row1][col1];
-    map[row1][col1] = tmp;
+function logicalMove(condition: boolean, truePhase: LogicalMove, falsePhase: LogicalMove) {
+    return condition ? truePhase : falsePhase;
 }
 
 function tranformMove(move: Move): PairNumber {
@@ -431,6 +441,12 @@ function tranformMove(move: Move): PairNumber {
         case Move.RIGTH:
             return [0, 1];
     }
+}
+
+function swap(map: BlockWrapper[][], [row1, col1]: PairNumber, [row2, col2]: PairNumber) {
+    const tmp = map[row2][col2];
+    map[row2][col2] = map[row1][col1];
+    map[row1][col1] = tmp;
 }
 
 function initBlankMap(gameConfig: GameConfig): BlockWrapper[][] {
@@ -454,6 +470,10 @@ interface LogicalMove extends Array<Move | Move[]> { 0: Move; 1: Move[] }
 
 enum Move {
     UP, DOWN, LEFT, RIGTH
+}
+
+enum MoveBlockResult {
+    COMPLETED = 'COMPLETED', FAILED = 'FAILED', STEPPED = 'STEPPED'
 }
 
 enum Position {

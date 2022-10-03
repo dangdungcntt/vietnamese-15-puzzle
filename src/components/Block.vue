@@ -12,8 +12,7 @@ const { cell, backgroundUrl } = defineProps<{
 defineEmits(['click']);
 
 const isBlockItem = cell.isBlockItem;
-const isUseImage = !!backgroundUrl
-
+const isUseImage = !!backgroundUrl;
 </script>
 
 <template>
