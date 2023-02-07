@@ -17,7 +17,7 @@ const { mapSize } = defineProps<{ mapSize?: string }>();
 const { isValid, mapSpec } = useMapSize(mapSize, { gridRows: 5, gridCols: 3 });
 
 const resultsMap = buildResultMap(mapSpec);
-const { requiredData, shuffeData } = buildInitData(mapSpec);
+const { requiredData, shuffleData } = buildInitData(mapSpec);
 
 const message = ref('Loading..');
 
@@ -34,7 +34,7 @@ onMounted(async () => {
     let pin = nextPin(0);
 
     while (times < LIMIT_GENERATE_TIMES) {
-        let state = generateBlocksState(resultsMap, requiredData, shuffeData, createRandom(pin.toString()));
+        let state = generateBlocksState(resultsMap, requiredData, shuffleData, createRandom(pin.toString()));
 
         if (await asyncCheck(state.blockMaps)) {
             for (let i = 0; i < MAP_SIZES.length; i++) {

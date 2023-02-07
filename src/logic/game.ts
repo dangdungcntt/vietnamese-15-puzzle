@@ -1,27 +1,27 @@
-import { ref } from "vue";
-import { shuffle } from "../composables/helpers";
-import Cell from "../model/Cell";
-import { BlockConfig, BlockSpec, CellType, GameConfig, GameMode, MapSpec } from "../model/GameConfig";
-import { LIMIT_GENERATE_TIMES, GAME_VIEWPORT_PADDING } from "./constants";
+import {ref}                                                 from 'vue';
+import {shuffle}                                             from '../composables/helpers';
+import Cell                                                  from '../model/Cell';
+import {BlockConfig, BlockSpec, CellType, GameMode, MapSpec} from '../model/GameConfig';
+import {GAME_VIEWPORT_PADDING, LIMIT_GENERATE_TIMES}         from './constants';
 
-export function buildInitData({ gridCols, gridRows }: MapSpec) {
+export function buildInitData({gridCols, gridRows}: MapSpec): { requiredData: number[], shuffleData: number[] } {
     const requiredData: number[] = [0, 1];
-    const shuffeData: number[] = [];
+    const shuffleData: number[] = [];
 
     for (let i = 2; i <= gridCols * gridRows; i++) {
-        shuffeData.push(i);
+        shuffleData.push(i);
     }
 
-    return { requiredData, shuffeData };
+    return {requiredData, shuffleData};
 }
 
-export function buildResultMap({ gridCols, gridRows }: MapSpec) {
+export function buildResultMap({gridCols, gridRows}: MapSpec): number[][] {
     const results = [
         [0, ...[...Array(gridCols - 1)].map(() => -1)],
     ];
 
     for (let i = 1; i <= gridRows; i++) {
-        let row = []
+        let row = [];
         for (let j = 1; j <= gridCols; j++) {
             row.push((i - 1) * gridCols + j);
         }
@@ -31,13 +31,13 @@ export function buildResultMap({ gridCols, gridRows }: MapSpec) {
     return results;
 }
 
-export function generateValidBlocksState(results: number[][], requiredData: number[], shuffeData: number[], randFunc: () => number) {
+export function generateValidBlocksState(results: number[][], requiredData: number[], shuffleData: number[], randFunc: () => number) {
     let blocks = null;
     let blockMaps = null;
     let times = 0;
 
     do {
-        let state = generateBlocksState(results, requiredData, shuffeData, randFunc);
+        let state = generateBlocksState(results, requiredData, shuffleData, randFunc);
         blocks = state.blocks;
         blockMaps = state.blockMaps;
         if (times > LIMIT_GENERATE_TIMES) {
@@ -46,10 +46,10 @@ export function generateValidBlocksState(results: number[][], requiredData: numb
         times++;
     } while (!isSolvable(blockMaps));
 
-    return { blockMaps, blocks };
+    return {blockMaps, blocks};
 }
 
-export function buildGameContainerSpec({ blockSpec, mapSpec }: { blockSpec: BlockSpec, mapSpec: MapSpec }) {
+export function buildGameContainerSpec({blockSpec, mapSpec}: { blockSpec: BlockSpec, mapSpec: MapSpec }) {
     const CONTAINER_WIDTH = mapSpec.gridCols * (blockSpec.size + blockSpec.gap) + blockSpec.gap;
     const CONTAINER_HEIGHT = (mapSpec.gridRows + 1) * (blockSpec.size + blockSpec.gap) + blockSpec.gap;
 
@@ -57,40 +57,43 @@ export function buildGameContainerSpec({ blockSpec, mapSpec }: { blockSpec: Bloc
     const BACKGROUND_HEIGHT = mapSpec.gridRows * blockSpec.size + blockSpec.gap * (mapSpec.gridRows - 1);
 
     return {
-        height: CONTAINER_HEIGHT,
-        width: CONTAINER_WIDTH,
-        backgroundWidth: BACKGROUND_WIDTH,
+        height          : CONTAINER_HEIGHT,
+        width           : CONTAINER_WIDTH,
+        backgroundWidth : BACKGROUND_WIDTH,
         backgroundHeight: BACKGROUND_HEIGHT,
     };
 }
 
-export function buildBlockConfig({ mode, mapSpec }: { mode: GameMode, mapSpec: MapSpec }, overrideConfig?: BlockSpec) {
+export function buildBlockConfig({mode, mapSpec}: { mode: GameMode, mapSpec: MapSpec }, overrideConfig?: BlockSpec) {
     const isImageMode = mode == GameMode.IMAGE;
     const maxGridSize = Math.max(mapSpec.gridCols, mapSpec.gridRows);
 
     const GAP = overrideConfig ? overrideConfig.gap : (isImageMode ? 2 : (maxGridSize >= 12 ? 6 : (maxGridSize >= 8 ? 8 : 12)));
     const BORDER_RADIUS = overrideConfig ? overrideConfig.borderRadius : (isImageMode ? 2 : 10);
 
-    return { gap: GAP, borderRadius: BORDER_RADIUS };
+    return {gap: GAP, borderRadius: BORDER_RADIUS};
 }
 
-export function buildBlockSpec({ blockConfig, mapSpec }: { blockConfig: BlockConfig, mapSpec: MapSpec }, { innerWidth, innerHeight }: { innerWidth: number, innerHeight: number }) {
+export function buildBlockSpec({blockConfig, mapSpec}: { blockConfig: BlockConfig, mapSpec: MapSpec }, {
+    innerWidth,
+    innerHeight
+}: { innerWidth: number, innerHeight: number }) {
     const maxWidth = (innerWidth - GAME_VIEWPORT_PADDING * 2 - (mapSpec.gridCols + 1) * blockConfig.gap) / mapSpec.gridCols;
     const maxHeight = (innerHeight - GAME_VIEWPORT_PADDING * 2 - (mapSpec.gridRows + 2) * blockConfig.gap) / (mapSpec.gridRows + 1);
     const BLOCK_SIZE = Math.min(220, maxWidth, maxHeight);
 
-    return { size: BLOCK_SIZE, gap: blockConfig.gap, borderRadius: blockConfig.borderRadius };
+    return {size: BLOCK_SIZE, gap: blockConfig.gap, borderRadius: blockConfig.borderRadius};
 }
 
 export function generateBlocksState(results: number[][], requiredData: number[], shuffeData: number[], randFunc: () => number) {
     const blocks = ref<Cell[]>([...requiredData, ...shuffle(shuffeData, randFunc)].map(value => {
         return new Cell({
-            type: CellType.BLOCK,
+            type : CellType.BLOCK,
             value: value,
-            text: value?.toString(),
-            row: 0,
-            col: 0
-        } as Cell)
+            text : value?.toString(),
+            row  : 0,
+            col  : 0
+        } as Cell);
     }));
 
     const blockMaps: Cell[][] = [];
@@ -100,7 +103,7 @@ export function generateBlocksState(results: number[][], requiredData: number[],
         let row = [];
         for (let j = 0; j < results[i].length; j++) {
             if (results[i][j] == -1) {
-                row.push(new Cell({ type: CellType.WALL, value: -1, row: i, col: j } as Cell));
+                row.push(new Cell({type: CellType.WALL, value: -1, row: i, col: j} as Cell));
                 continue;
             }
             let cell = blocks.value[takenBlockIndex++];
@@ -109,7 +112,7 @@ export function generateBlocksState(results: number[][], requiredData: number[],
             let [cX, cY] = convertValueToCorrectPosition(cell.value, {
                 gridRows: results.length,
                 gridCols: results[i].length
-            })
+            });
             cell.correctRow = cX;
             cell.correctCol = cY;
 
@@ -118,10 +121,10 @@ export function generateBlocksState(results: number[][], requiredData: number[],
         blockMaps.push(row);
     }
 
-    return { blocks, blockMaps };
+    return {blocks, blockMaps};
 }
 
-function convertValueToCorrectPosition(value: number, { gridCols }: MapSpec) {
+function convertValueToCorrectPosition(value: number, {gridCols}: MapSpec) {
     if (value == 0) {
         return [0, 0];
     }
@@ -131,7 +134,7 @@ function convertValueToCorrectPosition(value: number, { gridCols }: MapSpec) {
     ];
 }
 
-export function isSolvable(blockMaps: Cell[][]) {
+export function isSolvable(blockMaps: Cell[][]): boolean {
     let parity = 0;
     const gridRows = blockMaps.length;
     const gridColumns = blockMaps[0].length;

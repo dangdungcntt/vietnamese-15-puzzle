@@ -64,85 +64,81 @@ export async function resolve(delay: string | undefined) {
             const block = blocks.find(it => it.correctRow == i && it.correctCol == j)!;
             console.log(`Moving ${block.value} to ${[block.correctRow, block.correctCol]}`);
             await moveBlockToPosition(block, [block.correctRow, block.correctCol]);
-            block.markFrezee();
+            block.markFreeze();
         }
 
         const firstBlock = blocks.find(it => it.correctRow == i && it.correctCol == 0)!;
         const secondBlock = blocks.find(it => it.correctRow == i && it.correctCol == 1)!;
 
-        function isAligned() {
-            return firstBlock.isCorrect && secondBlock.isCorrect;
-        }
+        const isAligned = () => firstBlock.isCorrect && secondBlock.isCorrect;
 
         await moveBlockToPosition(firstBlock, [secondBlock.correctRow, secondBlock.correctCol], isAligned);
-        firstBlock.markFrezee();
+        firstBlock.markFreeze();
 
         let success = await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 1, secondBlock.correctCol], isAligned);
         if (!success) {
-            firstBlock.unFrezee();
+            firstBlock.unFreeze();
 
             await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 2, secondBlock.correctCol]);
-            secondBlock.markFrezee();
+            secondBlock.markFreeze();
 
             await moveBlockToPosition(firstBlock, [secondBlock.correctRow, secondBlock.correctCol]);
-            firstBlock.markFrezee();
+            firstBlock.markFreeze();
 
-            secondBlock.unFrezee();
+            secondBlock.unFreeze();
             await moveBlockToPosition(secondBlock, [secondBlock.correctRow - 1, secondBlock.correctCol]);
         }
 
-        secondBlock.markFrezee();
-        firstBlock.unFrezee();
+        secondBlock.markFreeze();
+        firstBlock.unFreeze();
 
         await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol]);
-        firstBlock.markFrezee();
-        secondBlock.unFrezee();
+        firstBlock.markFreeze();
+        secondBlock.unFreeze();
 
         await moveBlockToPosition(secondBlock, [secondBlock.correctRow, secondBlock.correctCol]);
-        secondBlock.markFrezee();
+        secondBlock.markFreeze();
     }
 
     for (let j = gameConfig.cols - 1; j > 1; j--) {
         const firstBlock = blocks.find(it => it.correctRow == 1 && it.correctCol == j)!;
         const secondBlock = blocks.find(it => it.correctRow == 2 && it.correctCol == j)!;
 
-        function isAligned() {
-            return firstBlock.isCorrect && secondBlock.isCorrect;
-        }
+        const isAligned = () => firstBlock.isCorrect && secondBlock.isCorrect;
 
         await moveBlockToPosition(secondBlock, [firstBlock.correctRow, firstBlock.correctCol], isAligned);
-        secondBlock.markFrezee();
+        secondBlock.markFreeze();
 
         let success = await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol - 1], isAligned);
         if (!success) {
-            secondBlock.unFrezee();
+            secondBlock.unFreeze();
             await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol - 2]);
-            firstBlock.markFrezee();
-            secondBlock.unFrezee();
+            firstBlock.markFreeze();
+            secondBlock.unFreeze();
             await moveBlockToPosition(secondBlock, [firstBlock.correctRow, firstBlock.correctCol]);
-            secondBlock.markFrezee();
-            firstBlock.unFrezee();
+            secondBlock.markFreeze();
+            firstBlock.unFreeze();
             await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol - 1]);
         }
-        firstBlock.markFrezee();
-        secondBlock.unFrezee();
+        firstBlock.markFreeze();
+        secondBlock.unFreeze();
 
         await moveBlockToPosition(secondBlock, [secondBlock.correctRow, secondBlock.correctCol]);
-        secondBlock.markFrezee();
-        firstBlock.unFrezee();
+        secondBlock.markFreeze();
+        firstBlock.unFreeze();
 
         await moveBlockToPosition(firstBlock, [firstBlock.correctRow, firstBlock.correctCol]);
-        firstBlock.markFrezee();
+        firstBlock.markFreeze();
     }
 
     //Còn lại 4 ô nhưng chỉ cần gọi hàm xếp ô số 2 và ô số 1 thì các ô còn lại sẽ tự đúng vị trí
     const _2bl = blocks.find(it => it.value == 2)!;
     await moveBlockToPosition(_2bl, [_2bl.correctRow, _2bl.correctCol]);
-    _2bl.markFrezee();
+    _2bl.markFreeze();
 
     const _1bl = blocks.find(it => it.value == 1)!;
     await moveBlockToPosition(_1bl, [_1bl.correctRow, _1bl.correctCol]);
-    _1bl.markFrezee();
+    _1bl.markFreeze();
 
     status = SolveStatus.IDLE;
     console.log(`Resolved in ${(Date.now() - start) / 1000}s`);
@@ -171,11 +167,6 @@ export async function resolve(delay: string | undefined) {
         if (status !== SolveStatus.RUNNING) {
             throw new Error('puzzle-resolver: Invalid status');
         }
-
-        // if (!block.isImage) {
-        //     clearHighlightEl();
-        //     block.getEl().classList.add('puzzle-resolver-target');
-        // }
 
         const block_target_p = calculateRelativePosition([block.row, block.col], targetPosition);
 
@@ -362,23 +353,23 @@ export async function resolve(delay: string | undefined) {
 
     function move(moveType: Move) {
         return new Promise<boolean>(resolve => {
-            const [rowDelta, colDeta] = tranformMove(moveType);
+            const [rowDelta, colDelta] = transformMove(moveType);
             const currentBlankPosition: PairNumber = [blankBlock.row, blankBlock.col]
-            const targetBlock: PairNumber = [blankBlock.row + rowDelta, blankBlock.col + colDeta]
+            const targetBlock: PairNumber = [blankBlock.row + rowDelta, blankBlock.col + colDelta]
             if (!map[targetBlock[0]] || !map[targetBlock[0]][targetBlock[1]]) {
                 console.log(`Move: Not exists target ${targetBlock}`);
                 resolve(false);
                 return;
             }
 
-            if (map[targetBlock[0]][targetBlock[1]].value == -1 || map[targetBlock[0]][targetBlock[1]].frezee) {
-                console.log(`Move: -1 or frezee ${targetBlock}`);
+            if (map[targetBlock[0]][targetBlock[1]].value == -1 || map[targetBlock[0]][targetBlock[1]].freeze) {
+                console.log(`Move: -1 or freeze ${targetBlock}`);
                 resolve(false);
                 return;
             }
 
             if (processingBlock && ignoredBlock[`${processingBlock.value} - ${processingBlock.row} - ${processingBlock.col}--${targetBlock[0]} - ${targetBlock[1]}`]) {
-                console.log(`Move: -1 or frezee ${targetBlock}`);
+                console.log(`Move: -1 or freeze ${targetBlock}`);
                 resolve(false);
                 return;
             }
@@ -430,7 +421,7 @@ function logicalMove(condition: boolean, truePhase: LogicalMove, falsePhase: Log
     return condition ? truePhase : falsePhase;
 }
 
-function tranformMove(move: Move): PairNumber {
+function transformMove(move: Move): PairNumber {
     switch (move) {
         case Move.UP:
             return [-1, 0];
@@ -495,21 +486,17 @@ class GameConfig {
 
 class BlockWrapper {
     private el: HTMLDivElement;
-    private val: number;
+    private readonly val: number;
     private cRow: number;
     private cCol: number;
-    private isFrezee: boolean;
+    private isFreeze: boolean;
 
     constructor(el: HTMLDivElement) {
         this.el = el;
         this.cRow = -1;
         this.cCol = -1;
         this.val = parseInt(this.el.dataset['value'] || '-1');
-        this.isFrezee = false;
-    }
-
-    public getEl() {
-        return this.el;
+        this.isFreeze = false;
     }
 
     public click() {
@@ -520,12 +507,12 @@ class BlockWrapper {
         return new BlockWrapper(el as HTMLDivElement);
     }
 
-    public markFrezee() {
-        this.isFrezee = true;
+    public markFreeze() {
+        this.isFreeze = true;
     }
 
-    public unFrezee() {
-        this.isFrezee = false;
+    public unFreeze() {
+        this.isFreeze = false;
     }
 
     public setCorrectPosition(row: number, col: number) {
@@ -545,8 +532,8 @@ class BlockWrapper {
         return this.val;
     }
 
-    public get frezee(): boolean {
-        return this.isFrezee;
+    public get freeze(): boolean {
+        return this.isFreeze;
     }
 
     public get correctRow(): number {
@@ -559,10 +546,6 @@ class BlockWrapper {
 
     public get isCorrect(): boolean {
         return this.row === this.cRow && this.col === this.cCol;
-    }
-
-    public get isImage(): boolean {
-        return this.el.classList.contains('block-mode-image')
     }
 }
 

@@ -33,11 +33,11 @@ const containerSpec = computed<ContainerSpec>(() => buildGameContainerSpec({ blo
 
 const results = buildResultMap(config.mapSpec);
 
-const { requiredData, shuffeData } = buildInitData(config.mapSpec);
+const { requiredData, shuffleData } = buildInitData(config.mapSpec);
 
 const randFunc = pin ? createRandom(pin) : () => Math.random();
 
-const { blocks, blockMaps } = generateValidBlocksState(results, requiredData, shuffeData, randFunc);
+const { blocks, blockMaps } = generateValidBlocksState(results, requiredData, shuffleData, randFunc);
 
 const blankBlock = ref<Cell>(blocks.value[0]);
 
